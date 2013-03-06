@@ -14,18 +14,30 @@ def get_fin_trans(transition):
 
 class startautomaton(automaton):
 
+# Constructeur
 
 	def __init__(self, alphabet=None, epsilons=None, states=None, initials=None, finals=None, 
 		transitions=None):
 		automaton.__init__(self, alphabet, epsilons, states, initials, finals, transitions)	
 
-	def echanger_etats_ini_fin(self):
+# Fonctions utilitaires
 
-		ei = self._initial_states
-		self.remove_initial_states()
-		self.add_initial_states(self._final_states)
-		self.remove_final_states()
-		self.add_final_states(ei)
+	def print_alphabet(self):
+		print("Affichage de l'alphabet : ")
+		for l in self.get_alphabet():
+			print(l)
+
+	def est_deterministe(self):
+		res = True
+		for e in self.get_states():
+			for l in self.get_alphabet():				
+				if len(self._delta(l, [e])) > 1:
+					res = False
+					break
+			if not res:
+				break
+
+		return res
 
 	def regrouper_etats(self, liste_etats):
 		nouvel_etat = self.get_maximal_id() + 1
@@ -49,7 +61,28 @@ class startautomaton(automaton):
 							self.remove_transition( (e,a, successeur) )
 
 
+	def est_complet(self):		
+		res = True
+		for e in self.get_states():
+			for l in self.get_alphabet():				
+				if self._delta(l, [e]) == pretty_set():
+					res = False
+					break
+			if not res:
+				break
+		return res
 
+	def has_epsilon_transition(self, etat):
+		pass
+
+	def suppression_epsilon_transition(self):
+		for e in self.get_states():
+			for l in self.get_alphabet():
+				sucesseurs = _delta(l, [e])
+				for suc in sucesseurs:
+					if (self.has_epsilon_transition):
+						pass
+	
 	def remove_initial_states(self):
 		self._initial_states = set()
 
@@ -73,6 +106,15 @@ class startautomaton(automaton):
 		if(erase_q1):
 			self._states.remove(q1)
 
+	def echanger_etats_ini_fin(self):
+
+		ei = self._initial_states
+		self.remove_initial_states()
+		self.add_initial_states(self._final_states)
+		self.remove_final_states()
+		self.add_final_states(ei)
+
+# Fonctions pour gérer les différentes actions sur l'automate
 
 	def completer(self):	
 		# Ajout de l etat puit :)
@@ -83,12 +125,10 @@ class startautomaton(automaton):
 		#	 print(a)
 		#	 print(self.delta(a))
 
-
 		for e in self.get_states() :
 			for a in self.get_alphabet() :
 				if self._delta(a, [e]) != pretty_set():
 					self.add_transition( (e, a, etat_puit) )
-
 
 		return self
 
@@ -117,22 +157,7 @@ class startautomaton(automaton):
 			self.add_transition(renverser_tuple(trans))
 			
 		return self
-
-	def express_to_auto(self):
-		return self
-
-
-	def est_deterministe(self):
-		res = True
-		for e in self.get_states():
-			for l in self.get_alphabet():				
-				res = False
-		
-		return res
-
-	def est_complet(self):
-		return True
-
+	
 	def union(self, aut2, deterministe=True):
 		if self.get_alphabet() == aut2.get_alphabet():
 			# On travaille sur des automates deterministes
@@ -184,9 +209,14 @@ class startautomaton(automaton):
 	def complement(self):
 		return self
 
+	def express_to_auto(self):
+		return self
+
+# Main pour tester
+
 if __name__ == "__main__":
-	alphabet = ['a', 'b', '0']
-	epsilons = ['0']
+	alphabet = ['a', 'b']
+	epsilons = []
 	a = startautomaton(
 		alphabet,
 		epsilons,
@@ -203,3 +233,10 @@ if __name__ == "__main__":
 a.display("Avant union", False)
 a.union(b)
 a.display("Apres union")
+
+"""
+print("L'automate a est déterministe : " + str(a.est_deterministe()))
+print("L'automate a est complet : " + str(a.est_complet()))
+print("L'automate b est déterministe : " + str(b.est_deterministe()))
+print("L'automate b est complet : " + str(b.est_complet()))
+"""
