@@ -77,22 +77,84 @@ class startautomaton(automaton):
 	def express_to_auto(self):
 		return self
 
-	def union(self):
-		return self
 
-	def intersection(self):
-		return self
+	def est_deterministe(self):
+		res = True
+		for e in self.get_states():
+			for l in self.get_alphabet():				
+				res = False
+		
+		return res
+
+	def est_complet(self):
+		return True
+
+	def union(self, aut2, deterministe=True):
+		if self.get_alphabet() == aut2.get_alphabet():
+			# On travaille sur des automates deterministes
+			if deterministe and not aut2.est_deterministe():
+				aut2.determinisation()
+
+			if deterministe and not self.est_deterministe():
+				self.determinisation()
+			
+			# On travaille sur des automates complet
+			if not aut2.est_complet():
+				aut2.completer()
+
+			if not self.est_complet():
+				self.completer()
+
+			"""
+				création de l'automate des couples
+			"""
+			return self
+		else:
+			return None
+
+	def intersection(self, aut2, deterministe=True):
+		# Il faut vérifier que les deux automates ont le même alphabet
+		if self.get_alphabet() == aut2.get_alphabet():
+			# On travaille sur des automates deterministes
+			if deterministe and not aut2.est_deterministe():
+				aut2.determinisation()
+
+			if deterministe and not self.est_deterministe():
+				self.determinisation()
+			
+			# On travaille sur des automates complet
+			if not aut2.est_complet():
+				aut2.completer()
+
+			if not self.est_complet():
+				self.completer()
+
+			"""
+				création de l'automate des couples
+			"""
+			return self
+		else:
+			return None
 
 	def complement(self):
 		return self
 
 if __name__ == "__main__":
+	alphabet = ['a', 'b', '0']
+	epsilons = ['0']
 	a = startautomaton(
-		alphabet = ['a', 'b', '0'],
-		epsilons = ['0'],
+		alphabet,
+		epsilons,
     	states = [5], initials = [0,1], finals = [3,4],
-    	transitions=[(0,'a',1), (1,'b',2), (2,'b',2), (2,'0',3), (3,'a',4)]
+    	transitions=[(0,'a',1), (1,'b',2), (2,'b',2), (2,'b',3), (3,'a',4)]
 	)
-a.display("Avant completer", False)
-a.completer()
-a.display("Apres completer")
+	b = startautomaton(
+		alphabet,
+		epsilons,
+    	states = [], initials = [1], finals = [4,5],
+    	transitions=[(1,'a',2), (6,'b',2), (2,'b',3), (4,'0',6), (3,'a',4), (4,'b',5)]
+	)
+#a.display("Avant union", False)
+a.display("Avant union", False)
+a.union(b)
+#a.display("Apres completer")
