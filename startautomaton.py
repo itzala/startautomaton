@@ -41,8 +41,7 @@ class startautomaton(automaton):
 
 		for e in self.get_states() :
 			for a in self.get_alphabet() :
-				tmp = self._delta(a, [e])
-				if tmp == pretty_set():
+				if self._delta(a, [e]) == pretty_set():
 					self.add_transition( (e, a, etat_puit) )
 
 
