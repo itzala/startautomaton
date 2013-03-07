@@ -1,16 +1,18 @@
 from automaton import *
+from queue import *
 	
-def renverser_tuple(transition):	
-	origin, lettre, fin = transition
-	return (fin, lettre, origin)
 
-def get_orgine_trans(transition):
+def get_origine_trans(transition):
 	origin, lettre, fin = transition
 	return origin
 
 def get_fin_trans(transition):
 	origin, lettre, fin = transition
 	return fin
+
+def renverser_tuple(transition):	
+	origin, lettre, fin = transition
+	return (fin, lettre, origin)
 
 class startautomaton(automaton):
 
@@ -38,6 +40,16 @@ class startautomaton(automaton):
 				break
 
 		return res
+
+	def lister_etats_indetermines(self, etat):
+		liste = []
+		for l in self.get_alphabet():
+			tmp = self._delta(l, [etat])
+			if (len(tmp) > 1):
+				for e in tmp:
+					liste.append(e)
+		return liste
+
 
 	def regrouper_etats(self, liste_etats):
 		nouvel_etat = self.get_maximal_id() + 1
@@ -81,16 +93,26 @@ class startautomaton(automaton):
 				break
 		return res
 
-	def has_epsilon_transition(self, etat):
-		pass
+	def has_epsilon_transition_etat(self, etat):
+
+		for espi in self.get_epsilons():
+			if not self._delta(espi, [etat]) == pretty_set():
+				return True
+
+		return False			
 
 	def suppression_epsilon_transition(self):
 		for e in self.get_states():
-			for l in self.get_alphabet():
-				sucesseurs = _delta(l, [e])
-				for suc in sucesseurs:
-					if (self.has_epsilon_transition):
-						pass
+			self.suppression_epsilon_transition_etat(e)
+			
+
+	def suppression_epsilon_transition_etat(self, etat):
+		for l in self.get_alphabet():
+			for suc in self._delta(l, [etat]):
+				for ep in self.get_epsilons():
+					for petit_fils in self._delta(ep, [suc]):
+						add_transition(etat, l, petit_fils)
+						remove_transition( (suc, ep, petit_fils) )
 	
 	def remove_initial_states(self):
 		self._initial_states = set()
@@ -161,9 +183,28 @@ class startautomaton(automaton):
 		liste_initiaux = []
 		for e in self.get_initial_states():
 			liste_initiaux.append(e)
-		self.regrouper_etats(liste_initiaux)
 
+		file_etats = Queue()
+		initial = self.regrouper_etats(liste_initiaux)
+		self.add_initial_state(initial)
+		file_etats.put(initial)
+		etats_finaux = self.get_final_states()
+		while not file_etats.empty():
+			etat_courant = file_etats.get()									# Je recupere letat a traiter
+			etats_indetermines = self.lister_etats_indetermines(etat_courant)	# Je recupere les liste des etats suivants a regrouper
+			final = False
+			for e in etats_indetermines :									# Je definis si letat obtenu de la fusion doit etre final
+				if e in etats_finaux:
+					final = True
+					break
+			tmp = self.regrouper_etats(etats_indetermines)
+			if final:
+				self.add_final_state(tmp)
 
+			for l in self.get_alphabet():									# Je rajoute les etats suivants au traitement
+				for e in self._delta(l, [etat_courant]):
+					if e != etat_courant:
+						file_etats.put(e)
 		return self
 
 	def miroir(self):
@@ -250,17 +291,10 @@ if __name__ == "__main__":
 		transitions=[(1,'a',2), (6,'b',2), (2,'b',3), (4,'0',6), (3,'a',4), (4,'b',5)]
 	)
 
-	c = startautomaton(
-		alphabet,
-		epsilons,
-		states = [], initials = [1], finals = [3,4],
-		transitions=[(1,'b',2), (1,'b',3), (2,'a',4), (2,'e',3)])
 #a.display("Avant union", False)
-c.display("Avant regroup", False)
-c.regrouper_etats( (1,2) )
-c.display("Apres regroup1", False)
-c.regrouper_etats( (3,4) )
-c.display("Apres regroup2")
+a.display("Avant regroup", False)
+a.determinisation()
+a.display("Apres regroup1")
 
 """
 print("L'automate a est déterministe : " + str(a.est_deterministe()))
