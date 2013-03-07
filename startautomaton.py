@@ -1,16 +1,17 @@
 from automaton import *
 	
-def renverser_tuple(transition):	
-	origin, lettre, fin = transition
-	return (fin, lettre, origin)
 
-def get_orgine_trans(transition):
+def get_origine_trans(transition):
 	origin, lettre, fin = transition
 	return origin
 
 def get_fin_trans(transition):
 	origin, lettre, fin = transition
 	return fin
+
+def renverser_tuple(transition):	
+	origin, lettre, fin = transition
+	return (fin, lettre, origin)
 
 class startautomaton(automaton):
 
@@ -72,16 +73,26 @@ class startautomaton(automaton):
 				break
 		return res
 
-	def has_epsilon_transition(self, etat):
-		pass
+	def has_epsilon_transition_etat(self, etat):
+
+		for espi in self.get_epsilons():
+			if not self._delta(espi, [etat]) == pretty_set():
+				return True
+
+		return False			
 
 	def suppression_epsilon_transition(self):
 		for e in self.get_states():
-			for l in self.get_alphabet():
-				sucesseurs = _delta(l, [e])
-				for suc in sucesseurs:
-					if (self.has_epsilon_transition):
-						pass
+			self.suppression_epsilon_transition_etat(e)
+			
+
+	def suppression_epsilon_transition_etat(self, etat):
+		for l in self.get_alphabet():
+			for suc in self._delta(l, [etat]):
+				for ep in self.get_epsilons():
+					for petit_fils in self._delta(ep, [suc]):
+						add_transition(etat, l, petit_fils)
+						remove_transition( (suc, ep, petit_fils) )
 	
 	def remove_initial_states(self):
 		self._initial_states = set()
@@ -229,14 +240,3 @@ if __name__ == "__main__":
 		states = [], initials = [1], finals = [4,5],
 		transitions=[(1,'a',2), (6,'b',2), (2,'b',3), (4,'0',6), (3,'a',4), (4,'b',5)]
 	)
-#a.display("Avant union", False)
-a.display("Avant union", False)
-a.union(b)
-a.display("Apres union")
-
-"""
-print("L'automate a est déterministe : " + str(a.est_deterministe()))
-print("L'automate a est complet : " + str(a.est_complet()))
-print("L'automate b est déterministe : " + str(b.est_deterministe()))
-print("L'automate b est complet : " + str(b.est_complet()))
-"""
