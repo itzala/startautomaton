@@ -42,23 +42,32 @@ class startautomaton(automaton):
 	def regrouper_etats(self, liste_etats):
 		nouvel_etat = self.get_maximal_id() + 1
 
-		for e in liste_etats:
-			if (e in self.get_initial_states()):
-				self.add_initial_state(nouvel_etat)
-			if (e in self.get_final_states()):
-				self.add_final_state(nouvel_etat)
+		# # Les etats sont-ils initiaux ou finaux ?
+		# # Si oui alors on ajoute le nouvel etat dans les correspondants et on supprime le parent des correspondants
+		# for e in liste_etats: 
+		# 	if (e in self.get_initial_states()):
+		# 		self.add_initial_state(nouvel_etat)
+		# 		remove_initial_state(e)
+		# 	if (e in self.get_final_states()):
+		# 		self.add_final_state(nouvel_etat)
+		# 		remove_final_state(e)
+
 		for e in self.get_states():
 			for a in self.get_alphabet():
 				if(e in liste_etats):
 					for fin in self._delta(a, [e]):
-						self.add_transition((nouvel_etat, a, fin))
+						if(not fin in liste_etats):
+							self.add_transition((nouvel_etat, a, fin))
+						else:
+							self.add_transition((nouvel_etat, a, nouvel_etat))
 						self.remove_transition((e,a,fin))
-				else:
-					tmp = self._delta(a, [e])
-					for successeur in tmp:
-						if (successeur in liste_etats):
-							self.add_transition( (e, a, nouvel_etat) )
-							self.remove_transition( (e,a, successeur) )
+
+				tmp = self._delta(a, [e])
+				for successeur in tmp:
+					if (successeur in liste_etats):
+						self.add_transition( (e, a, nouvel_etat) )
+						self.remove_transition( (e,a, successeur) )
+		return nouvel_etat
 
 
 	def est_complet(self):		
@@ -91,6 +100,12 @@ class startautomaton(automaton):
 
 	def remove_transitions(self):
 		self._adjacence.clear()
+
+	def remove_initial_state(self, state):
+		self._initial_states.remove(state)
+
+	def remove_final_state(self, state):
+		self._final_states.remove(state)
 
 	def remove_transition(self, transition):
 		erase_q1 = True
@@ -142,8 +157,13 @@ class startautomaton(automaton):
 		3/ récursif tant que file non vide
 
 
-		nico -> si {1,2,3} alors new = 123
 		"""
+		liste_initiaux = []
+		for e in self.get_initial_states():
+			liste_initiaux.append(e)
+		self.regrouper_etats(liste_initiaux)
+
+
 		return self
 
 	def miroir(self):
@@ -229,10 +249,18 @@ if __name__ == "__main__":
 		states = [], initials = [1], finals = [4,5],
 		transitions=[(1,'a',2), (6,'b',2), (2,'b',3), (4,'0',6), (3,'a',4), (4,'b',5)]
 	)
+
+	c = startautomaton(
+		alphabet,
+		epsilons,
+		states = [], initials = [1], finals = [3,4],
+		transitions=[(1,'b',2), (1,'b',3), (2,'a',4), (2,'e',3)])
 #a.display("Avant union", False)
-a.display("Avant union", False)
-a.union(b)
-a.display("Apres union")
+c.display("Avant regroup", False)
+c.regrouper_etats( (1,2) )
+c.display("Apres regroup1", False)
+c.regrouper_etats( (3,4) )
+c.display("Apres regroup2")
 
 """
 print("L'automate a est déterministe : " + str(a.est_deterministe()))
