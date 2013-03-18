@@ -29,6 +29,15 @@ class startautomaton(automaton):
 		for l in self.get_alphabet():
 			print(l)
 
+	def get_epsilon_transitions(self):
+		liste = []
+		for e in self.get_states():					# Pour tous les etats
+			for eps in self.get_epsilons():			# Pour tous les caracteres representant epsilon
+				if (e, eps) in self._adjacence:		# Il nous faut une transition
+					for dest in self._adjacence[(e, eps)]:
+						liste.append((e, eps, dest))
+		return liste
+
 	def est_deterministe(self):
 		res = True
 		for e in self.get_states():
@@ -52,18 +61,7 @@ class startautomaton(automaton):
 
 
 	def regrouper_etats(self, liste_etats):
-		#nouvel_etat = self.get_maximal_id() + 1
-		nouvel_etat = pretty_set(liste_etats)
-		# # Les etats sont-ils initiaux ou finaux ?
-		# # Si oui alors on ajoute le nouvel etat dans les correspondants et on supprime le parent des correspondants
-		# for e in liste_etats: 
-		# 	if (e in self.get_initial_states()):
-		# 		self.add_initial_state(nouvel_etat)
-		# 		remove_initial_state(e)
-		# 	if (e in self.get_final_states()):
-		# 		self.add_final_state(nouvel_etat)
-		# 		remove_final_state(e)
-
+		nouvel_etat = pretty_set(liste_etats)		
 		for e in self.get_states():
 			for a in self.get_alphabet():
 				if(e in liste_etats):
@@ -79,6 +77,9 @@ class startautomaton(automaton):
 					if (successeur in liste_etats):
 						self.add_transition( (e, a, nouvel_etat) )
 						self.remove_transition( (e, a, successeur) )
+
+		for e in liste_etats:
+			self._states.remove(e)
 		return nouvel_etat
 
 	def est_complet(self):		
@@ -94,30 +95,21 @@ class startautomaton(automaton):
 
 	def has_epsilon_transition_etat(self, etat):
 
-		for espi in self.get_epsilons():
-			if not self._delta(espi, [etat]) == pretty_set():
-				return True
+		# for espi in self.get_epsilons():
+		# 	if not self._delta(espi, [etat]) == pretty_set():
+		# 		return True
 
-		return False			
+		# return False	
+		pass		
 
-	def suppression_epsilon_transition(self):
+	def remove_epsilon_transitions(self):
+		for origin in self.get_states():
+			for l in self.get_alphabet():
+				for e in self.delta(l, [origin]):
+					self.add_transition((origin, l, e))
 		for e in self.get_states():
-			self.suppression_epsilon_transition_etat(e)
-			
-
-	def suppression_epsilon_transition_etat(self, etat):		
-		for l in self.get_alphabet():
-			for suc in self._delta(l, [etat]):				
-				for ep in self.get_epsilons():
-					print("delta ", suc, " sur ", suc , " : ", pretty_set(self._delta(ep, [suc])))
-					for petit_fils in self._delta(ep, [suc]):
-						print("Ajout de la transition  (", etat,", '",l,"',",petit_fils,")")
-						self.add_transition( (etat, l, petit_fils) )
-
-						for a in self.get_alphabet():
-							for sommet in self._delta(a, [petit_fils]):
-								self.add_transition( (suc, a, sommet) )
-						self.remove_transition( (suc, ep, petit_fils) )
+			for removable in self.get_epsilon_transitions():
+				self.remove_transition(removable)
 	
 	def remove_initial_states(self):
 		self._initial_states = set()
@@ -135,20 +127,10 @@ class startautomaton(automaton):
 		self._final_states.remove(state)
 
 	def remove_transition(self, transition):
-		erase_q1 = True
 		q1,lettre,q2 = transition
-		
 		if (q1, lettre) in self._adjacence:
 			if q2 in self._adjacence[(q1, lettre)]:
 				self._adjacence[(q1, lettre)].remove(q2)
-
-		for a in self.get_alphabet():					# On regarde si l'etat est a l'origine de transition
-			if(self._delta(a, [q1]) != set()):
-				erase_q1 = False
-				break
-		
-		if(erase_q1):
-			self._states.remove(q1)
 
 	def echanger_etats_ini_fin(self):
 
@@ -176,6 +158,7 @@ class startautomaton(automaton):
 		return self
 
 	def determinisation(self):
+		self.remove_epsilon_transitions()
 		liste_initiaux = []
 		for e in self.get_initial_states():
 			liste_initiaux.append(e)
@@ -203,9 +186,10 @@ class startautomaton(automaton):
 						file_etats.put(e)
 
 
-		if not self.est_complet():
-			self.completer()
 
+
+		# if not self.est_complet():
+		# 	self.completer()
 		return self
 	
 	def miroir(self):
@@ -283,7 +267,7 @@ if __name__ == "__main__":
 		alphabet,
 		epsilons,
 		states = [5], initials = [0,1], finals = [3,4],
-		transitions=[(0,'a',1), (1,'b',2), (2,'b',2), (2,'b',3), (3,'a',4), (3, 'a', 1), (2, '0',5), (5,'a', 1)]
+		transitions=[(0,'a',1), (1,'b',2), (2,'b',2), (2,'b',3), (3,'a',4), (3, 'a', 1), (2, '0',5), (5,'0', 4), (4,'b', 3)]
 	)
 
 """
@@ -291,5 +275,5 @@ if __name__ == "__main__":
 	=> http://superuser.com/questions/334625/dotty-shows-all-labels-as-dots-period-instead-of-text
 """
 a.display("Avant", False)
-a.suppression_epsilon_transition()
+a.determinisation()
 a.display("Apres", False)
