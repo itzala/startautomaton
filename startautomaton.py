@@ -1,5 +1,5 @@
 from automaton import *
-from queue import *
+from collections import deque
 	
 
 def get_origine_trans(transition):
@@ -52,35 +52,49 @@ class startautomaton(automaton):
 
 	def lister_etats_indetermines(self, etat):
 		liste = []
-		for l in self.get_alphabet():
-			tmp = self._delta(l, [etat])
-			if (len(tmp) > 1):
+		for l in self.get_alphabet():					# pour chaque lettre de l'alphabet
+			tmp = self._delta(l, [etat])				
+			if (len(tmp) > 1):							# si plusieurs etats sont accessibles
 				for e in tmp:
-					liste.append(e)
-		return liste
+					liste.append(e)						# alors on les rajoute à la liste
+
+		return liste 									# on retourne la liste ainsi formee
+
+	# def copier_regroupement_etats(self, automate_origine, liste_etats):
+	# 	nouvel_etat = pretty_set(liste_etats)
+
+	# 	for e in self.get_states():
+	# 		for l in self.get_alphabet():
+	# 			if automate_origine._delta(l, [e]).symmetric_difference(nouvel_etat) == set():		# Si l'etat traite permet d'acceder a seulement les etats regroupes
+	# 				self.add_transition(e, l, nouvel_etat)											# alors on ajoute une transition de cet etat vers l'etat regroupe
+	# 				pass
+	# 			if e in automate_origine._delta(l, [nouvel_etat])
 
 
-	def regrouper_etats(self, liste_etats):
-		nouvel_etat = pretty_set(liste_etats)		
-		for e in self.get_states():
-			for a in self.get_alphabet():
-				if(e in liste_etats):
-					for fin in self._delta(a, [e]):
-						if(not fin in liste_etats):
-							self.add_transition((nouvel_etat, a, fin))
-						else:
-							self.add_transition((nouvel_etat, a, nouvel_etat))
-						self.remove_transition((e,a,fin))
+	# def regrouper_etats(self, liste_etats):
+	# 	nouvel_etat = pretty_set(liste_etats)							# On nomme le nouvel etat
+	# 	for e in self.get_states():
+	# 		for a in self.get_alphabet():
+	# 			tmp = self._delta(a, [e])
+	# 			if e in liste_etats:									# Pour chacun des etats à regrouper
+	# 				for fin in tmp:						
+	# 					if not fin in liste_etats:								# On rajoute une transition partant l'etat a regrouper
+	# 						self.add_transition((nouvel_etat, a, fin))			# cas : on a (1, 'a', 2) donc ({0,1} , 'a', 2)
+	# 					else:
+	# 						self.add_transition((nouvel_etat, a, nouvel_etat))	# cas : on a (1, 'a' 0) donc ({0,1}, 'a', {0,1})
+	# 																			# cas 2 : on a (1, 'a', 1) donc ({0,1}, 'a', {0,1})
 
-				tmp = self._delta(a, [e])
-				for successeur in tmp:
-					if (successeur in liste_etats):
-						self.add_transition( (e, a, nouvel_etat) )
-						self.remove_transition( (e, a, successeur) )
-
-		for e in liste_etats:
-			self._states.remove(e)
-		return nouvel_etat
+	# 					self.remove_transition((e,a,fin))						# On efface l'ancienne transition
+	# 			elif not (nouvel_etat == pretty_set()) and  tmp.issuperset(nouvel_etat):					# si tous les etats regroupes sont accessibles
+	# 				print(nouvel_etat)
+	# 				print(self._delta(a, [e]))
+	# 				print(self._delta(a, [e]).issuperset(nouvel_etat))
+	# 				print("toto\n")
+	# 				self.add_transition( (e, a, nouvel_etat) )						# alors une transition de cet etat vers le nouvel etat
+	# 				for successeur in self._delta(a, [e]):
+	# 					self.remove_transition( (e, a, successeur) )					# et on efface les anciennes transitions
+		
+		# return nouvel_etat
 
 	def est_complet(self):		
 		res = True
@@ -92,16 +106,7 @@ class startautomaton(automaton):
 			if not res:
 				break
 		return res
-
-	def has_epsilon_transition_etat(self, etat):
-
-		# for espi in self.get_epsilons():
-		# 	if not self._delta(espi, [etat]) == pretty_set():
-		# 		return True
-
-		# return False	
-		pass		
-
+	
 	def remove_epsilon_transitions(self):
 		for origin in self.get_states():
 			for l in self.get_alphabet():
@@ -149,13 +154,44 @@ class startautomaton(automaton):
 
 		for e in self.get_states() :
 			for a in self.get_alphabet() :
-				if self._delta(a, [e]) == pretty_set():
+				if not a in self.get_epsilons() and self._delta(a, [e]) == pretty_set():
 					self.add_transition( (e, a, etat_puit) )
 
 		return self
 
 	def minimiser(self):
 		return self
+
+	def determinisation_mew(self):				# Fuck la police !
+		automate_tmp = startautomaton(
+		alphabet = self.get_alphabet(),
+		epsilons = self.get_epsilons())
+
+		self.remove_epsilon_transitions()
+
+		automate_tmp.add_initial_state(pretty_set(self.get_initial_states()))
+
+		file_etats = deque(automate_tmp.get_initial_states())
+
+		while len(file_etats) > 0:
+			etat_courant = file_etats.popleft()
+
+			if not isinstance(etat_courant, pretty_set):
+				etat_courant = set(etat_courant)
+
+			for l in self.get_alphabet():
+				if not l in self.get_epsilons():
+					nouveau = self._delta(l, etat_courant)
+					if not nouveau in automate_tmp.get_states():
+						file_etats.append(nouveau)
+					automate_tmp.add_transition((etat_courant, l, nouveau))
+
+
+
+
+		
+
+
 
 	def determinisation(self):
 		self.remove_epsilon_transitions()
@@ -266,8 +302,8 @@ if __name__ == "__main__":
 	a = startautomaton(
 		alphabet,
 		epsilons,
-		states = [5], initials = [0,1], finals = [3,4],
-		transitions=[(0,'a',1), (1,'b',2), (2,'b',2), (2,'b',3), (3,'a',4), (3, 'a', 1), (2, '0',5), (5,'0', 4), (4,'b', 3)]
+		states = [], initials = [0,1], finals = [3,4],
+		transitions=[(0,'a', 1), (1, 'b', 2), (2, 'b', 2), (2, 'b', 3), (2, 'a', 5), (3, 'a', 1), (3, 'a', 4), (4, 'b', 3), (5, 'b', 4), (5, 'b', 1)]
 	)
 
 """
@@ -277,3 +313,7 @@ if __name__ == "__main__":
 a.display("Avant", False)
 a.determinisation()
 a.display("Apres", False)
+
+"""
+(0 'a' {1,2}) (5 'a' 2) ==> (0 'a' {1,2}) (5 'a' {1,2}) ?
+"""
