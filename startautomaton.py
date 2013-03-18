@@ -52,8 +52,8 @@ class startautomaton(automaton):
 
 
 	def regrouper_etats(self, liste_etats):
-		nouvel_etat = self.get_maximal_id() + 1
-
+		#nouvel_etat = self.get_maximal_id() + 1
+		nouvel_etat = pretty_set(liste_etats)
 		# # Les etats sont-ils initiaux ou finaux ?
 		# # Si oui alors on ajoute le nouvel etat dans les correspondants et on supprime le parent des correspondants
 		# for e in liste_etats: 
@@ -78,9 +78,8 @@ class startautomaton(automaton):
 				for successeur in tmp:
 					if (successeur in liste_etats):
 						self.add_transition( (e, a, nouvel_etat) )
-						self.remove_transition( (e,a, successeur) )
+						self.remove_transition( (e, a, successeur) )
 		return nouvel_etat
-
 
 	def est_complet(self):		
 		res = True
@@ -106,13 +105,19 @@ class startautomaton(automaton):
 			self.suppression_epsilon_transition_etat(e)
 			
 
-	def suppression_epsilon_transition_etat(self, etat):
+	def suppression_epsilon_transition_etat(self, etat):		
 		for l in self.get_alphabet():
-			for suc in self._delta(l, [etat]):
+			for suc in self._delta(l, [etat]):				
 				for ep in self.get_epsilons():
+					print("delta ", suc, " sur ", suc , " : ", pretty_set(self._delta(ep, [suc])))
 					for petit_fils in self._delta(ep, [suc]):
-						add_transition(etat, l, petit_fils)
-						remove_transition( (suc, ep, petit_fils) )
+						print("Ajout de la transition  (", etat,", '",l,"',",petit_fils,")")
+						self.add_transition( (etat, l, petit_fils) )
+
+						for a in self.get_alphabet():
+							for sommet in self._delta(a, [petit_fils]):
+								self.add_transition( (suc, a, sommet) )
+						self.remove_transition( (suc, ep, petit_fils) )
 	
 	def remove_initial_states(self):
 		self._initial_states = set()
@@ -132,14 +137,16 @@ class startautomaton(automaton):
 	def remove_transition(self, transition):
 		erase_q1 = True
 		q1,lettre,q2 = transition
-		if((q1, lettre) in self._adjacence):
+		
+		if (q1, lettre) in self._adjacence:
 			if q2 in self._adjacence[(q1, lettre)]:
 				self._adjacence[(q1, lettre)].remove(q2)
-		for a in self.get_alphabet():
-			if(erase_q1 and self._delta(a, [q1]) != set()):
+
+		for a in self.get_alphabet():					# On regarde si l'etat est a l'origine de transition
+			if(self._delta(a, [q1]) != set()):
 				erase_q1 = False
-			if(not(erase_q1)):
 				break
+		
 		if(erase_q1):
 			self._states.remove(q1)
 
@@ -158,13 +165,9 @@ class startautomaton(automaton):
 		etat_puit = self.get_maximal_id() + 1
 		self.add_state(etat_puit)
 
-		# for a in self.get_alphabet():
-		#	 print(a)
-		#	 print(self.delta(a))
-
 		for e in self.get_states() :
 			for a in self.get_alphabet() :
-				if self._delta(a, [e]) != pretty_set():
+				if self._delta(a, [e]) == pretty_set():
 					self.add_transition( (e, a, etat_puit) )
 
 		return self
@@ -173,13 +176,6 @@ class startautomaton(automaton):
 		return self
 
 	def determinisation(self):
-		"""
-		1/ récupérer les états initiaux en un ensemble
-		2/ déterminiser cet ensemble et enfiler les nouveaux états
-		3/ récursif tant que file non vide
-
-
-		"""
 		liste_initiaux = []
 		for e in self.get_initial_states():
 			liste_initiaux.append(e)
@@ -194,7 +190,7 @@ class startautomaton(automaton):
 			etats_indetermines = self.lister_etats_indetermines(etat_courant)	# Je recupere les liste des etats suivants a regrouper
 			final = False
 			for e in etats_indetermines :									# Je definis si letat obtenu de la fusion doit etre final
-				if e in etats_finaux:
+				if e in etats_finaux:					
 					final = True
 					break
 			tmp = self.regrouper_etats(etats_indetermines)
@@ -203,10 +199,15 @@ class startautomaton(automaton):
 
 			for l in self.get_alphabet():									# Je rajoute les etats suivants au traitement
 				for e in self._delta(l, [etat_courant]):
-					if e != etat_courant:
+					if e != etat_courant:	# puisque tu fais le delta, e sera forcement different de etat_courant, non ?
 						file_etats.put(e)
-		return self
 
+
+		if not self.est_complet():
+			self.completer()
+
+		return self
+	
 	def miroir(self):
 		# Echange des etats finaux et initiaux
 		self.echanger_etats_ini_fin()
@@ -277,28 +278,18 @@ class startautomaton(automaton):
 
 if __name__ == "__main__":
 	alphabet = ['a', 'b']
-	epsilons = []
+	epsilons = ['0']
 	a = startautomaton(
 		alphabet,
 		epsilons,
 		states = [5], initials = [0,1], finals = [3,4],
-		transitions=[(0,'a',1), (1,'b',2), (2,'b',2), (2,'b',3), (3,'a',4)]
-	)
-	b = startautomaton(
-		alphabet,
-		epsilons,
-		states = [], initials = [1], finals = [4,5],
-		transitions=[(1,'a',2), (6,'b',2), (2,'b',3), (4,'0',6), (3,'a',4), (4,'b',5)]
+		transitions=[(0,'a',1), (1,'b',2), (2,'b',2), (2,'b',3), (3,'a',4), (3, 'a', 1), (2, '0',5), (5,'a', 1)]
 	)
 
-#a.display("Avant union", False)
-a.display("Avant regroup", False)
-a.determinisation()
-a.display("Apres regroup1")
-
 """
-print("L'automate a est déterministe : " + str(a.est_deterministe()))
-print("L'automate a est complet : " + str(a.est_complet()))
-print("L'automate b est déterministe : " + str(b.est_deterministe()))
-print("L'automate b est complet : " + str(b.est_complet()))
+	Si problème avec l'affichage des labels
+	=> http://superuser.com/questions/334625/dotty-shows-all-labels-as-dots-period-instead-of-text
 """
+a.display("Avant", False)
+a.suppression_epsilon_transition()
+a.display("Apres", False)
