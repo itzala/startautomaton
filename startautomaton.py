@@ -164,7 +164,7 @@ class startautomaton(automaton):
 
 		for e in self.get_states() :
 			for a in self.get_alphabet() :
-				if self._delta(a, [e]) != pretty_set():
+				if self._delta(a, [e]) == pretty_set():
 					self.add_transition( (e, a, etat_puit) )
 
 		return self
@@ -291,14 +291,6 @@ if __name__ == "__main__":
 		transitions=[(1,'a',2), (6,'b',2), (2,'b',3), (4,'0',6), (3,'a',4), (4,'b',5)]
 	)
 
-#a.display("Avant union", False)
-a.display("Avant regroup", False)
-a.determinisation()
-a.display("Apres regroup1")
-
-"""
-print("L'automate a est déterministe : " + str(a.est_deterministe()))
-print("L'automate a est complet : " + str(a.est_complet()))
-print("L'automate b est déterministe : " + str(b.est_deterministe()))
-print("L'automate b est complet : " + str(b.est_complet()))
-"""
+a.display("Avant", False)
+a.completer()
+a.display("Apres")
