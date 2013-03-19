@@ -19,8 +19,10 @@ class startautomaton(automaton):
 # Constructeur
 
 	def __init__(self, alphabet=None, epsilons=None, states=None, initials=None, finals=None, 
-		transitions=None):
-		automaton.__init__(self, alphabet, epsilons, states, initials, finals, transitions)	
+		transitions=None, deterministe=False, complet=False):
+		automaton.__init__(self, alphabet, epsilons, states, initials, finals, transitions)
+		self._est_complet = complet
+		self._est_deterministe = deterministe
 
 # Fonctions utilitaires
 
@@ -60,6 +62,9 @@ class startautomaton(automaton):
 					break
 			if not res:
 				break
+
+		self._est_complet = res
+
 		return res
 	
 	def remove_epsilon_transitions(self):
@@ -112,10 +117,25 @@ class startautomaton(automaton):
 				if not a in self.get_epsilons() and self._delta(a, [e]) == pretty_set():
 					self.add_transition( (e, a, etat_puit) )
 
+		self._est_complet = True
+
 		return self
 
-	def minimiser(self):
-		return self
+	def minimiser(self, destructif=False):
+		automate_tmp = startautomaton(
+		alphabet = self.get_alphabet(),
+		epsilons = self.get_epsilons())
+
+		alphabet_courant = self.get_alphabet() - self.get_epsilons()
+		for e in self.get_states():
+			nouvel = 0
+			if e in self.get_final_states():
+				nouvel = 1
+			for l in alphabet_courant:
+				nouvel <<= 1
+				for delta in self._delta(l, e):
+					nouvel += delta >> len(alphabet_courant)
+		return automate_tmp
 
 	def determinisation(self, destructif=False):		
 		automate_tmp = startautomaton(
@@ -151,12 +171,18 @@ class startautomaton(automaton):
 
 		if automate_tmp.get_final_states() == set():
 			print("ERREUR : l'automate n'a pas d'état final déterminisable")
+			self._est_deterministe = False
 			return self
+
+		automate_tmp.est_complet()
+
+		automate_tmp._est_deterministe = True
 
 		if destructif:
 			self.__init__(automate_tmp.get_alphabet(), automate_tmp.get_epsilons(),
 				automate_tmp.get_states(), automate_tmp.get_initial_states(),
-				automate_tmp.get_final_states(), automate_tmp.get_transitions())
+				automate_tmp.get_final_states(), automate_tmp.get_transitions(),
+				automate_tmp._est_deterministe, automate_tmp._est_complet)
 
 		return automate_tmp
 
@@ -177,12 +203,12 @@ class startautomaton(automaton):
 		if self.get_alphabet() == aut2.get_alphabet():
 			# On travaille sur des automates deterministes
 			if not aut2.est_deterministe():
-				aut2.determinisation()
-				aut2.renumber_the_states()
-
+				aut2.determinisation(True).display("aut2 = B deterministe", False)
+				assert aut2._est_deterministe, "aut2 = B n'est pas deterministe"
+				
 			if not self.est_deterministe():
-				self.determinisation()
-				self.renumber_the_states()
+				self.determinisation(True).display("A deterministe", False)
+				assert self._est_deterministe, "A n'est pas deterministe"
 			
 			# On travaille sur des automates complet
 			if not aut2.est_complet():
@@ -192,42 +218,115 @@ class startautomaton(automaton):
 				self.completer()		
 
 			automate_tmp = startautomaton(
-			alphabet = self.get_alphabet(),
-			epsilons = self.get_epsilons())
-
+				alphabet = self.get_alphabet(),
+				epsilons = self.get_epsilons())
+			finaux = (self.get_final_states()).union(aut2.get_final_states())
+			
 			# Création états initiaux de l'automate de l'union
 
+			pile_etats = []
 
-			etat = pretty_set((self.get_initial_states(), aut2.get_initial_states()))
-			automate_tmp.add_initial_state(etat)
+			etat_1 , etat_2 = 0 , 0
+			for ini_1 in self.get_initial_states():
+				for ini_2 in aut2.get_initial_states():
+					etat = (ini_1, ini_2)
+					etat_1 = ini_1
+					etat_2 = ini_2
+					automate_tmp.add_initial_state(etat)
+					pile_etats.append(etat)
 
 			# Création de l'automate des couples (automate de l'union)
-			
+			while len(pile_etats) > 0:
+				etat_courant = pile_etats.pop()
+				if not etat_courant == set():
+					etat_1, etat_2 = etat_courant
+					for l in self.get_alphabet():
+						if not l in self.get_epsilons():
+							delta_etat_1 = self._delta(l, [etat_1])
+							delta_etat_2 =  aut2._delta(l, [etat_2])
+							for e1 in delta_etat_1:
+								for e2 in delta_etat_2:
+									nouveau = (e1,e2)
+							
+							if not nouveau == set():
+								if not nouveau in automate_tmp.get_states():
+									pile_etats.append(nouveau)
+								for e in nouveau:								
+									if e in finaux:
+										automate_tmp.add_final_state(nouveau)
+										break
+
+								automate_tmp.add_transition((etat_courant, l, nouveau))
+
+
 			return automate_tmp
 		else:
 			return None
 
-	def intersection(self, aut2, deterministe=True):
-		# Il faut vérifier que les deux automates ont le même alphabet
+	def intersection(self, aut2):
+
 		if self.get_alphabet() == aut2.get_alphabet():
 			# On travaille sur des automates deterministes
-			if deterministe and not aut2.est_deterministe():
-				aut2.determinisation()
-
-			if deterministe and not self.est_deterministe():
-				self.determinisation()
+			if not aut2.est_deterministe():
+				aut2.determinisation(True).display("aut2 = B deterministe", False)
+				assert aut2._est_deterministe, "aut2 = B n'est pas deterministe"
+				
+			if not self.est_deterministe():
+				self.determinisation(True).display("A deterministe", False)
+				assert self._est_deterministe, "A n'est pas deterministe"
 			
 			# On travaille sur des automates complet
 			if not aut2.est_complet():
 				aut2.completer()
 
 			if not self.est_complet():
-				self.completer()
+				self.completer()		
 
-			"""
-				création de l'automate des couples
-			"""
-			return self
+			automate_tmp = startautomaton(
+				alphabet = self.get_alphabet(),
+				epsilons = self.get_epsilons())
+			finaux = (self.get_final_states()).union(aut2.get_final_states())
+			
+			# Création états initiaux de l'automate de l'union
+
+			pile_etats = []
+
+			etat_1 , etat_2 = 0 , 0
+			for ini_1 in self.get_initial_states():
+				for ini_2 in aut2.get_initial_states():
+					etat = (ini_1, ini_2)
+					etat_1 = ini_1
+					etat_2 = ini_2
+					automate_tmp.add_initial_state(etat)
+					pile_etats.append(etat)
+
+			# Création de l'automate des couples (automate de l'union)
+			while len(pile_etats) > 0:
+				etat_courant = pile_etats.pop()
+				if not etat_courant == set():
+					etat_1, etat_2 = etat_courant
+					for l in self.get_alphabet():
+						if not l in self.get_epsilons():
+							delta_etat_1 = self._delta(l, [etat_1])
+							delta_etat_2 =  aut2._delta(l, [etat_2])
+							for e1 in delta_etat_1:
+								for e2 in delta_etat_2:
+									nouveau = (e1,e2)
+							
+							if not nouveau == set():
+								if not nouveau in automate_tmp.get_states():
+									pile_etats.append(nouveau)
+								final = True
+								for e in nouveau:								
+									if not e in finaux:
+										final = False
+										break
+								if final:
+									automate_tmp.add_final_state(nouveau)
+								automate_tmp.add_transition((etat_courant, l, nouveau))
+
+
+			return automate_tmp
 		else:
 			return None
 
@@ -253,19 +352,31 @@ if __name__ == "__main__":
 		alphabet,
 		epsilons,
 		states = [], initials = [0], finals = [4],
-		transitions=[(0,'a',1), (1,'b',2), (2,'b',2), (3,'b',2), (3,'b',4), (2, 'a', 5), (4, 'a', 2)]
+		transitions=[(0,'a',1), (1,'b',2), (2,'b',2), (5, 'a',3), (3,'b',2), (3,'b',4), (2, 'a', 5), (4, 'a', 2)]
 	)
 
 """
 	Si problème avec l'affichage des labels
 	=> http://superuser.com/questions/334625/dotty-shows-all-labels-as-dots-period-instead-of-text
-"""
-a.display("A", False)
-b.display("B", False)
-b.determinisation(False).display("B deterministe")
 
-#a.union(b).display("Apres")
-
-"""
 (0 'a' {1,2}) (5 'a' 2) ==> (0 'a' {1,2}) (5 'a' {1,2}) ?
 """
+
+"""
+	DONE !
+"""
+
+#a.completer()
+#a.miroir()
+#a.remove_epsilon_transitions()
+#a.determiniser()
+#a.union(b)
+#a.intersection(b)
+
+"""
+	TO DO
+"""
+
+a.minimiser()
+#a.complement()
+#express_to_auto()
