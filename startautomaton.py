@@ -126,15 +126,15 @@ class startautomaton(automaton):
 		alphabet = self.get_alphabet(),
 		epsilons = self.get_epsilons())
 
-		alphabet_courant = self.get_alphabet() - self.get_epsilons()
-		for e in self.get_states():
-			nouvel = 0
-			if e in self.get_final_states():
-				nouvel = 1
-			for l in alphabet_courant:
-				nouvel <<= 1
-				for delta in self._delta(l, e):
-					nouvel += delta >> len(alphabet_courant)
+		# alphabet_courant = self.get_alphabet() - self.get_epsilons()
+		# for e in self.get_states():
+		# 	nouvel = 0
+		# 	if e in self.get_final_states():
+		# 		nouvel = 1
+		# 	for l in alphabet_courant:
+		# 		nouvel *= 10
+		# 		for delta in self._delta(l, e):
+		# 			nouvel += delta / pow(10,len(alphabet_courant))
 		return automate_tmp
 
 	def determinisation(self, destructif=False):		
