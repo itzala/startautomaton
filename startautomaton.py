@@ -1,5 +1,6 @@
 from automaton import *
 from collections import deque
+from operator import itemgetter
 	
 
 def get_origine_trans(transition):
@@ -126,16 +127,66 @@ class startautomaton(automaton):
 		alphabet = self.get_alphabet(),
 		epsilons = self.get_epsilons())
 
-		# alphabet_courant = self.get_alphabet() - self.get_epsilons()
-		# for e in self.get_states():
-		# 	nouvel = 0
-		# 	if e in self.get_final_states():
-		# 		nouvel = 1
-		# 	for l in alphabet_courant:
-		# 		nouvel *= 10
-		# 		for delta in self._delta(l, e):
-		# 			nouvel += delta / pow(10,len(alphabet_courant))
-		return automate_tmp
+		"""
+		Si aucun etat n'est accessible ou si plusieurs etats sont accessibles, alors il y a un pb dans l'algo !
+		"""
+
+
+		if not self.est_deterministe():						# On vérifie que l'automate est deterministe
+			self.determinisation(True)
+		if not self.est_complet():							# Et complet
+			self.completer()
+
+		if self._est_deterministe:
+			liste_etats = {}												# On cree un dictionnaire de listes avec comme clef un etat de l'automate
+			alphabet_courant = self.get_alphabet() - self.get_epsilons()
+			n_etat, code_etat = 0											# La liste aura deux éléments : le numero de l'etat et l'entier qui code son numero et ses transitions (voir algo)
+			for e in self.get_states():										# On commence par initialiser tous les numeros d'etat à 1 ou 0 si ils sont finaux ou pas
+				n_etat = 0
+				if e in self.get_final_states():
+					n_etat += 1
+				liste_etats[e] = [n_etat, n_etat]
+			for e in self.get_states:											# Ensuite on s'occupe de l'encodage
+				code_etat = liste_etats[e][0]									# On initialise l'entier avec la valeur de l'etat
+				for l in alphabet_courant:
+					for delta in self._delta(l, e):
+						code_etat *= pow(10, len(str(liste_etats[delta][0])))	# On ajoute le numero de l'etat accessible pour chaque transition
+						code_etat += liste_etats[delta][0]
+				liste_etats[e][1] = code_etat									# On sauvegarde l'entier
+
+
+			stabilise = False
+			while not stabilise:
+				stabilise = True
+
+				liste_triee = []												# On trie la liste des codes des etats
+				for etat, (numero, code) in liste_etats.items():
+					liste_triee.append(etat, code)
+				liste_triee = sorted(liste_triee, key=itemgetter(1), reverse=True)
+
+				for i in len(liste_triee):										# On change le numéro des etats pour leur affecter leur ordre lexicographique
+					liste_etats[liste_triee[i][0]][0] = i+1
+
+				for e in self.get_states:											# Ensuite on s'occupe de l'encodage
+					code_etat = liste_etats[e][0]									# On initialise l'entier avec la valeur de l'etat
+					for l in alphabet_courant:
+						for delta in self._delta(l, e):
+							code_etat *= pow(10, len(str(liste_etats[delta][0])))	# On ajoute le numero de l'etat accessible pour chaque transition
+							code_etat += liste_etats[delta][0]
+					if code_etat != liste_etats[e][1]: 								# Si l'entier est le même que le précedement calculé, on continue l'algo
+						stabilise = False
+						liste_etats[e][1] = code_etat								# Et on sauvegarde le nouvel entier
+
+
+
+			"""
+			Construction de l'automate a partir du resultat de l'ago precedent
+			"""
+
+
+			return automate_tmp 							# Si tout c'est bien passe on renvoie l'automate minimisé
+		else:
+			return self 									# Sinon on retourne l'automate d'origine
 
 	def determinisation(self, destructif=False):		
 		automate_tmp = startautomaton(
