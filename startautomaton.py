@@ -110,7 +110,7 @@ class startautomaton(automaton):
 
 	def completer(self):	
 		# Ajout de l etat puit :)
-		etat_puit = self.get_maximal_id() + 1
+		etat_puit = pretty_set([self.get_maximal_id() + 1])
 		self.add_state(etat_puit)
 
 		for e in self.get_states() :
@@ -131,13 +131,13 @@ class startautomaton(automaton):
 		Si aucun etat n'est accessible ou si plusieurs etats sont accessibles, alors il y a un pb dans l'algo !
 		"""
 
-
 		if not self.est_deterministe():						# On vérifie que l'automate est deterministe
 			self.determinisation(True)
 		if not self.est_complet():							# Et complet
 			self.completer()
 
 		if self._est_deterministe:
+			groupe_etat = 0		# Variable utilisée dans la construction de l'automate
 			liste_etats = {}												# On cree un dictionnaire de listes avec comme clef un etat de l'automate
 			alphabet_courant = self.get_alphabet() - self.get_epsilons()
 			n_etat, code_etat = 0, 0										# La liste aura deux éléments : le numero de l'etat et l'entier qui code son numero et ses transitions (voir algo)
@@ -153,49 +153,81 @@ class startautomaton(automaton):
 						code_etat *= pow(10, len(str(liste_etats[delta][0])))	# On ajoute le numero de l'etat accessible pour chaque transition
 						code_etat += liste_etats[delta][0]
 				liste_etats[e][1] = code_etat									# On sauvegarde l'entier
-			print("Liste des etats avant la boucle while : ", liste_etats)
 
 
 			stabilise = False
-			j = 0
 			while not stabilise:
-				j+=1
 				stabilise = True
 
-				liste_triee = []												# On trie la liste des codes des etats
+				liste_triee = []														# On trie la liste des codes des etats
 				for etat, (numero, code) in liste_etats.items():
 					liste_triee.append((etat, code))
 				liste_triee = sorted(liste_triee, key=itemgetter(1))
 
-				print("Liste triée des états par ordre lexicographique : ", liste_triee)
-				classe_etat = 0
-				liste_etats[liste_triee[0][0]][0] = classe_etat
-				for i in range(1,len(liste_triee)):										# On change le numéro des etats pour leur affecter leur ordre lexicographique
+				groupe_etat = 0
+				liste_etats[liste_triee[0][0]][0] = groupe_etat
+				for i in range(1,len(liste_triee)):										# On change le numéro des etats pour leur affecter l'ordre lexicographique de leur groupe
 					if liste_triee[i][1] != liste_triee[i-1][1]:
-						classe_etat += 1
+						groupe_etat += 1
+					if liste_etats[liste_triee[i][0]][0] != groupe_etat:				# Si le numero de l'etat est different de celui du groupe, alors il n'est pas stabilise
+						stabilise = False 												# Donc le reste de l'automate non plus
+						liste_etats[liste_triee[i][0]][0] = groupe_etat 				# Et on change le numero de l'etat
 
-					if liste_etats[liste_triee[i][0]][0] != classe_etat:
-						stabilise = False
-						liste_etats[liste_triee[i][0]][0] = classe_etat
-
-
-				for e in self.get_states():											# Ensuite on s'occupe de l'encodage
-					code_etat = liste_etats[e][0]									# On initialise l'entier avec la valeur de l'etat
-					for l in alphabet_courant:
-						for delta in self._delta(l, [e]):
-							code_etat *= pow(10, len(str(liste_etats[delta][0])))	# On ajoute le numero de l'etat accessible pour chaque transition
-							code_etat += liste_etats[delta][0]
-					liste_etats[e][1] = code_etat								# Et on sauvegarde le nouvel entier
-				print("Liste des etats à la ", j, "eme iteration : ", liste_etats, "\n")
-				if j == 50:
-					break
+				if not stabilise:
+					for e in self.get_states():											# Ensuite on s'occupe l'entier qui code son numero et ses transitions 
+						code_etat = liste_etats[e][0]									# On initialise l'entier avec la valeur de l'etat
+						for l in alphabet_courant:
+							for delta in self._delta(l, [e]):
+								code_etat *= pow(10, len(str(liste_etats[delta][0])))	# On ajoute le numero de l'etat accessible pour chaque transition
+								code_etat += liste_etats[delta][0]
+						liste_etats[e][1] = code_etat									# Et on sauvegarde le nouvel entier
+				
 
 
-			print("Réussi !")
+			
 			"""
 			Construction de l'automate a partir du resultat de l'ago precedent
 			"""
+			finaux = set(self.get_final_states())
+			initial = self.get_initial_states()
+			for e in initial:
+				automate_tmp.add_initial_states(initial)
 
+			file_etats = deque(initial)
+
+			while len(file_etats) > 0:
+				etat_courant = file_etats.popleft()
+				ensemble = False
+				for e in etat_courant:
+					if isinstance(e, pretty_set):
+						if len(e) > 1:
+							ensemble = True
+				for l in alphabet_courant:
+					nouveau = self._delta(l, [etat_courant])
+					if ensemble:
+						nouveau = set()
+						for e in etat_courant:
+							for etat_tmp in self._delta(l, [e]):
+								nouveau.add(etat_tmp)
+					nouveau_mini = []
+					for e in nouveau:
+						nouveau_mini += [etat for etat, liste in liste_etats.items() if liste[0] == liste_etats[e][0]]
+					if len(nouveau_mini) > 1:
+						nouveau_mini = pretty_set(nouveau_mini)
+					else:
+						for unique_etat in nouveau:
+							nouveau_mini = unique_etat
+					if not nouveau == set():
+						if not nouveau_mini in automate_tmp.get_states():
+							file_etats.append(nouveau_mini)
+						if nouveau_mini in finaux:
+							automate_tmp.add_final_state(nouveau_mini)
+						for e in nouveau_mini:
+							if e in finaux:
+								print("final")
+								automate_tmp.add_final_state(nouveau)
+								break
+						automate_tmp.add_transition((etat_courant, l, nouveau_mini))
 
 			return automate_tmp 							# Si tout c'est bien passe on renvoie l'automate minimisé
 		else:
@@ -207,36 +239,31 @@ class startautomaton(automaton):
 		epsilons = self.get_epsilons())
 
 		self.remove_epsilon_transitions()
-		finaux = self.get_final_states()
+		finaux = self.get_final_states()											# On récupère les etats finaux
 
-		automate_tmp.add_initial_state(pretty_set(self.get_initial_states()))
+		automate_tmp.add_initial_state(pretty_set(self.get_initial_states()))		# On ajoute les etats initiaux de l'automate d'orgine
 
-		file_etats = deque(automate_tmp.get_initial_states())
+		file_etats = deque(automate_tmp.get_initial_states())						# On créé une file avec les etats initiaux
 
-		while len(file_etats) > 0:
-			etat_courant = file_etats.popleft()
+		while len(file_etats) > 0:									# Tant qu'on a des etats rajoutés a l'automate deterministe
+			etat_courant = file_etats.popleft()							# On récupère l'etat a traiter
 
-			if not isinstance(etat_courant, pretty_set):
+			if not isinstance(etat_courant, pretty_set):				# On en fait un set, si s'en pas déjà un (juste pour simplifier l'implémentation)
 				etat_courant = set(etat_courant)
 
-			if not etat_courant == set():
-				for l in self.get_alphabet():
-					if not l in self.get_epsilons():
+			if not etat_courant == set():								# Si ce n'est pas un etat vide
+				for l in self.get_alphabet():								# Pour chaque lettre de l'alphabet
+					if not l in self.get_epsilons():						# On recupere l'etat accessible par cette lettre
 						nouveau = self._delta(l, etat_courant)
 						if not nouveau == set():
-							if not nouveau in automate_tmp.get_states():
+							if not nouveau in automate_tmp.get_states():			# Si l'etat n'a pas encore ete rajoute a l'automate deterministe, on l'enfile
 								file_etats.append(nouveau)
 							for e in nouveau:								
-								if e in finaux:
+								if e in finaux:										# Si l'etat	est final dans l'automate original, alors je l'ajoute aux finaux de l'automate deterministe
 									automate_tmp.add_final_state(nouveau)
 									break
 
-							automate_tmp.add_transition((etat_courant, l, nouveau))
-
-		if automate_tmp.get_final_states() == set():
-			print("ERREUR : l'automate n'a pas d'état final déterminisable")
-			self._est_deterministe = False
-			return self
+							automate_tmp.add_transition((etat_courant, l, nouveau))	# On rajoute l'etat et la transition depuis l'etat traite
 
 		automate_tmp.est_complet()
 
@@ -441,6 +468,6 @@ if __name__ == "__main__":
 	TO DO
 """
 a.determinisation().completer().display(wait=False)
-a.minimiser()
+a.minimiser().display("Minimise")
 #a.complement()
 #express_to_auto()
