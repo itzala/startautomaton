@@ -140,45 +140,58 @@ class startautomaton(automaton):
 		if self._est_deterministe:
 			liste_etats = {}												# On cree un dictionnaire de listes avec comme clef un etat de l'automate
 			alphabet_courant = self.get_alphabet() - self.get_epsilons()
-			n_etat, code_etat = 0											# La liste aura deux éléments : le numero de l'etat et l'entier qui code son numero et ses transitions (voir algo)
+			n_etat, code_etat = 0, 0										# La liste aura deux éléments : le numero de l'etat et l'entier qui code son numero et ses transitions (voir algo)
 			for e in self.get_states():										# On commence par initialiser tous les numeros d'etat à 1 ou 0 si ils sont finaux ou pas
 				n_etat = 0
 				if e in self.get_final_states():
 					n_etat += 1
 				liste_etats[e] = [n_etat, n_etat]
-			for e in self.get_states:											# Ensuite on s'occupe de l'encodage
+			for e in self.get_states():											# Ensuite on s'occupe de l'encodage
 				code_etat = liste_etats[e][0]									# On initialise l'entier avec la valeur de l'etat
 				for l in alphabet_courant:
-					for delta in self._delta(l, e):
+					for delta in self._delta(l, [e]):
 						code_etat *= pow(10, len(str(liste_etats[delta][0])))	# On ajoute le numero de l'etat accessible pour chaque transition
 						code_etat += liste_etats[delta][0]
 				liste_etats[e][1] = code_etat									# On sauvegarde l'entier
+			print("Liste des etats avant la boucle while : ", liste_etats)
 
 
 			stabilise = False
+			j = 0
 			while not stabilise:
+				j+=1
 				stabilise = True
 
 				liste_triee = []												# On trie la liste des codes des etats
 				for etat, (numero, code) in liste_etats.items():
-					liste_triee.append(etat, code)
-				liste_triee = sorted(liste_triee, key=itemgetter(1), reverse=True)
+					liste_triee.append((etat, code))
+				liste_triee = sorted(liste_triee, key=itemgetter(1))
 
-				for i in len(liste_triee):										# On change le numéro des etats pour leur affecter leur ordre lexicographique
-					liste_etats[liste_triee[i][0]][0] = i+1
+				print("Liste triée des états par ordre lexicographique : ", liste_triee)
+				classe_etat = 0
+				liste_etats[liste_triee[0][0]][0] = classe_etat
+				for i in range(1,len(liste_triee)):										# On change le numéro des etats pour leur affecter leur ordre lexicographique
+					if liste_triee[i][1] != liste_triee[i-1][1]:
+						classe_etat += 1
 
-				for e in self.get_states:											# Ensuite on s'occupe de l'encodage
+					if liste_etats[liste_triee[i][0]][0] != classe_etat:
+						stabilise = False
+						liste_etats[liste_triee[i][0]][0] = classe_etat
+
+
+				for e in self.get_states():											# Ensuite on s'occupe de l'encodage
 					code_etat = liste_etats[e][0]									# On initialise l'entier avec la valeur de l'etat
 					for l in alphabet_courant:
-						for delta in self._delta(l, e):
+						for delta in self._delta(l, [e]):
 							code_etat *= pow(10, len(str(liste_etats[delta][0])))	# On ajoute le numero de l'etat accessible pour chaque transition
 							code_etat += liste_etats[delta][0]
-					if code_etat != liste_etats[e][1]: 								# Si l'entier est le même que le précedement calculé, on continue l'algo
-						stabilise = False
-						liste_etats[e][1] = code_etat								# Et on sauvegarde le nouvel entier
+					liste_etats[e][1] = code_etat								# Et on sauvegarde le nouvel entier
+				print("Liste des etats à la ", j, "eme iteration : ", liste_etats, "\n")
+				if j == 50:
+					break
 
 
-
+			print("Réussi !")
 			"""
 			Construction de l'automate a partir du resultat de l'ago precedent
 			"""
@@ -427,7 +440,7 @@ if __name__ == "__main__":
 """
 	TO DO
 """
-
+a.determinisation().completer().display(wait=False)
 a.minimiser()
 #a.complement()
 #express_to_auto()
