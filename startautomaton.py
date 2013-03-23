@@ -421,8 +421,20 @@ class startautomaton(automaton):
 		else:
 			return None
 
-	def complement(self):
-		return self
+	def complement(self, destructif=False):
+		automate_tmp = self.clone()
+		automate_tmp.completer()
+		automate_tmp.determinisation(True)
+		finaux = automate_tmp.get_states() - automate_tmp.get_final_states()
+
+		automate_tmp.remove_final_states()
+		automate_tmp.add_final_states(finaux)
+		if destructif:
+			self.automaton(automate_tmp.get_alphabet(), automate_tmp.get_epsilons(), 
+				automate_tmp.get_states(), automate_tmp.get_initial_states(), automate_tmp.get_final_states(),
+				automate_tmp.get_transitions())
+
+		return automate_tmp
 
 	def express_to_auto(self):
 		return self
@@ -460,14 +472,13 @@ if __name__ == "__main__":
 #a.completer()
 #a.miroir()
 #a.remove_epsilon_transitions()
-#a.determiniser()
+#a.determinisation()
 #a.union(b)
 #a.intersection(b)
 
 """
 	TO DO
 """
-a.determinisation().completer().display(wait=False)
-a.minimiser().display("Minimise")
-#a.complement()
+a.completer().determinisation().display()
+a.complement().display()
 #express_to_auto()
