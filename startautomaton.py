@@ -424,8 +424,16 @@ class startautomaton(automaton):
 	def complement(self):
 		return self
 
-	def express_to_auto(self):
-		return self
+	@staticmethod
+	def express_to_auto(expression):
+		operateurs = ["+", ".", "*"]
+		automate_tmp = startautomaton(
+			initials=[0])
+
+		for elem in expression:
+			pass
+
+		return automate_tmp
 
 # Main pour tester
 
@@ -463,11 +471,13 @@ if __name__ == "__main__":
 #a.determiniser()
 #a.union(b)
 #a.intersection(b)
+#a.minimiser()
 
 """
 	TO DO
 """
-a.determinisation().completer().display(wait=False)
-a.minimiser().display("Minimise")
+
+expression = ["+", ["a", [".", ["*", "b"], ["a"]]]]
+
 #a.complement()
-#express_to_auto()
+startautomaton.express_to_auto(expression).display("Automate")
