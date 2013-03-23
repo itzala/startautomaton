@@ -437,13 +437,42 @@ class startautomaton(automaton):
 		return automate_tmp
 
 	@staticmethod
-	def express_to_auto(expression):
+	def traitement_expression(expression):
 		operateurs = ["+", ".", "*"]
+		transitions = []
+		length_exp = len(expression)
+		if length_exp < 2:
+			for elem in expression:
+				if elem in operateurs:
+					print("Expression mal formee !")
+					return None
+				if isinstance(elem, list):
+					return traitement_expression(elem)
+				else:
+					return elem
+		elif length_exp == 2:
+			if expression[0] in operateurs:
+				if expression[0] == "+":
+					pass
+		return None
+
+
+	@staticmethod
+	def express_to_auto(expression):
+		
 		automate_tmp = startautomaton(
 			initials=[0])
 
+		
+
 		for elem in expression:
-			pass
+			if elem in operateurs:
+				if elem == "+" :
+					pass
+				if elem == "*" :
+					pass
+				else:
+					pass
 
 		return automate_tmp
 
