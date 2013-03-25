@@ -437,24 +437,8 @@ class startautomaton(automaton):
 		return automate_tmp
 
 	@staticmethod
-	def traitement_expression(expression):
-		operateurs = ["+", ".", "*"]
-		transitions = []
-		length_exp = len(expression)
-		if length_exp < 2:
-			for elem in expression:
-				if elem in operateurs:
-					print("Expression mal formee !")
-					return None
-				if isinstance(elem, list):
-					return traitement_expression(elem)
-				else:
-					return elem
-		elif length_exp == 2:
-			if expression[0] in operateurs:
-				if expression[0] == "+":
-					pass
-		return None
+	def traitement_expression(expression, etat_ini=0):
+		pass
 
 
 	@staticmethod
@@ -463,17 +447,26 @@ class startautomaton(automaton):
 		automate_tmp = startautomaton(
 			initials=[0])
 
+
+		"""
+		traiter(expr, etat_ini):
+			if e not list:
+				dernier_etat += 1
+				add_transition((etat_ini, e, dernier_etat))
+				etats_finaux = dernier_etat
+			elif e == '+':
+				etat_courant = dernier_etat +1
+				etats_finaux = triter(expr[1], etat_courant)				
+				add_transition((etat_ini, '+', etat_courant))
+
+
+		TO DO => A COMPLETER !!!
+
+
+			return etats_finaux
+
+		"""
 		
-
-		for elem in expression:
-			if elem in operateurs:
-				if elem == "+" :
-					pass
-				if elem == "*" :
-					pass
-				else:
-					pass
-
 		return automate_tmp
 
 # Main pour tester
