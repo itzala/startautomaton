@@ -436,16 +436,90 @@ class startautomaton(automaton):
 
 		return automate_tmp
 
-	@staticmethod
-	def traitement_expression(expression, etat_ini=0):
+	def traiter_ou_transition(self, expression, etat_ini):
+		etat_max = self.get_maximal_id()
+		if isinstance(expression, list):
+			for e in expression:
+				etat_max = self.get_maximal_id()
+				if isinstance(e, list):
+					self.add_final_states(traitement_expression(expression[0], etat_ini))
+				else:
+					lettre = expression
+					if e[0] == "+":
+						lettre = "+"
+						self.traiter_ou_transition(e[1], etat_max + 1)
+					if e[0] == "*":
+						lettre = "*"
+						self.traiter_etoile_transition(e[1], etat_max + 1)
+					if e[0] == ".":
+						lettre = "."
+						self.traiter_concat_transition(e[1], etat_max + 1)
+
+					self.add_transition((etat_ini, lettre, etat_max + 1))
+					self.add_final_state(etat_max + 1)
+
+		else:
+			self.add_transition((etat_ini, expression, etat_max + 1))
+			self.add_final_state(etat_max + 1)
+
+	def traiter_etoile_transition(self, expression, etat_ini):
+		etat_max = self.get_maximal_id()
+		if isinstance(expression, list):
+			for e in expression:
+				etat_max = self.get_maximal_id()
+				if isinstance(e, list):
+					traitement_expression(expression[0], etat_ini)
+				else:
+					lettre = expression
+					if e[0] == "+":
+						lettre = "+"
+						self.traiter_ou_transition(e[1], etat_max + 1)
+					if e[0] == "*":
+						lettre = "*"
+						self.traiter_etoile_transition(e[1], etat_max + 1)
+					if e[0] == ".":
+						lettre = "."
+						self.traiter_concat_transition(e[1], etat_max + 1)
+
+					self.add_transition((etat_ini, lettre, etat_ini))
+					self.add_final_state(etat_max + 1)
+
+		else:
+			self.add_transition((etat_ini, expression, etat_ini))
+			self.add_final_state(etat_ini)
+		
+
+	def traiter_concat_transition(self, expression, etat_ini):
 		pass
+
+	def traitement_expression(self, expression, etat_ini=0):
+		pass
+
+		etat_courant = self.get_maximal_id()
+
+		if expression[0] == "+":
+			self.add_transition((etat_ini, "+", etat_courant))
+			etat finaux = self.traiter_ou_transition(expression[1], etat_courant)
+			etat_courant = self.get_maximal_id()
+		"""
+		Traitement des deux autres operateurs
+		"""
+
+			
+
+
 
 
 	@staticmethod
 	def express_to_auto(expression):
-		
+		operateurs = [".", "+", "*"]
 		automate_tmp = startautomaton(
-			initials=[0])
+			initials =[0],
+			epsilons = operateurs
+			)
+
+
+
 
 
 		"""
@@ -460,7 +534,7 @@ class startautomaton(automaton):
 				add_transition((etat_ini, '+', etat_courant))
 
 
-		TO DO => A COMPLETER !!!
+		
 
 
 			return etats_finaux
