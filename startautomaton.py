@@ -336,171 +336,119 @@ class startautomaton(automaton):
 		return automate_tmp
 
 	def traiter_ou_transition(self, expression, etat_ini):
-		etat_max = self.get_maximal_id() + 1
+		operateurs = [".", "+", "*"]
 		liste_etat_finaux_sous_automate = []
-		if isinstance(expression, list):
-			if expression[0] == "+":
-				if len(expression) > 2:
-					print("Erreur : un \"+\" doit être suivi d'une liste et d'une seule")
-					return None
-				lettre = "plus"
-				liste_etat_finaux_sous_automate += self.traiter_ou_transition(expression[1], etat_max)
-				self.add_transition((etat_ini, lettre, etat_max))
-				print((etat_ini, lettre, etat_max))
+		if not isinstance(expression, list):														# Si les paramètres d'une ou transition ne sont pas dans un liste
+			print("Erreur : expression mal formée au niveau d'un \"+\"")							# On renvoie une erreur
+			return []
+		if expression[0] in operateurs:													# Si le premier élément de la liste est +, * ou .
+			liste_etat_finaux_sous_automate = self.traitement_expression(expression[1], etat_ini)			# On appelle traitement_expression pour l'etat courant et la liste
+		else:																						# Sinon
+			for lettre in expression:																# On prend chaque élément de la liste des paramètres
+				if not isinstance(lettre, list):														# Si ce n'est pas une liste
+					if lettre in operateurs:														# Si c'est un +, * ou .
+						print("Erreur : expression mal formée au niveau d'un \"+\"")							#On renvoie un erreur
+						return []	
+					etat_max = self.get_maximal_id() + 1													# Sinon
+					print((etat_ini, lettre, etat_max))
+					self.add_transition((etat_ini, lettre, etat_max))											# On fait une transition depuis l'etat courant vers un nouvel etat par la lettre traitée
+					liste_etat_finaux_sous_automate += [etat_max] 												# Et on ajoute ce nouvel etat à la liste des etats finaux de ce sous-automate
+				else:																					# Sinon
+					liste_etat_finaux_sous_automate += self.traitement_expression(lettre, etat_ini)			# On appelle traitement_expression pour l'état courant avec la liste à traiter
+																											# Et on ajoute les etats renvoyés par celle-ci aux etats finaux du sous-automate
+		
 
-			elif expression[0] == "*":
-				if len(expression) > 2:
-					print("Erreur : un \"*\" doit être suivi d'une liste et d'une seule")
-					return None
-				lettre = "etoile"
-				liste_etat_finaux_sous_automate += self.traiter_etoile_transition(expression[1], etat_max)
-				self.add_transition((etat_ini, lettre, etat_max))
-				print((etat_ini, lettre, etat_max))
+		return liste_etat_finaux_sous_automate 														# On retourne les etats finaux du sous-automate
 
-			elif expression[0] == ".":
-				lettre = "concat"
-				liste_etat_finaux_sous_automate += self.traiter_concat_transition(expression[1:], etat_max)
-				self.add_transition((etat_ini, lettre, etat_max))
-				print((etat_ini, lettre, etat_max))
-
-			else:
-				for e in expression:
-					etat_max = self.get_maximal_id()+1
-					if isinstance(e, list):
-						tmp = self.traitement_expression(e, etat_ini)
-						liste_etat_finaux_sous_automate += [tmp]
-						self.add_final_states(tmp)
-					elif not e in self.get_epsilons():
-						lettre = e
-						self.add_transition((etat_ini, lettre, etat_max))
-						print((etat_ini, lettre, etat_max))
-						self.add_final_state(etat_max)
-						liste_etat_finaux_sous_automate += [etat_max]
-					else:
-						print("Erreur : la liste de paramètres du \"+\" est mal formée")
-
-
-
-		else:
-			print("Erreur : un \"+\" doit être suivi d'une liste")
-		return liste_etat_finaux_sous_automate
 
 	def traiter_etoile_transition(self, expression, etat_ini):
-		etat_max = self.get_maximal_id() + 1
+		operateurs = [".", "+", "*"]
 		liste_etat_finaux_sous_automate = []
-		if isinstance(expression, list):
-			if expression[0] == "+":
-				if len(expression) > 2:
-					print("Erreur : un \"+\" doit être suivi d'une liste et d'une seule")
-					return None
-				lettre = "plus"
-				liste_etat_finaux_sous_automate += self.traiter_ou_transition(expression[1], etat_max)
-				self.add_transition((etat_ini, lettre, etat_max))
-				print((etat_ini, lettre, etat_max))
-
-
-			elif expression[0] == "*":
-				if len(expression) > 2:
-					print("Erreur : un \"*\" doit être suivi d'une liste et d'une seule")
-					return None
-				lettre = "etoile"
-				liste_etat_finaux_sous_automate += self.traiter_etoile_transition(expression[1], etat_max)
-				self.add_transition((etat_ini, lettre, etat_max))
-				print((etat_ini, lettre, etat_max))
-
-			elif expression[0] == ".":
-				lettre = "concat"
-				liste_etat_finaux_sous_automate += self.traiter_concat_transition(expression[1:], etat_max)
-				self.add_transition((etat_ini, lettre, etat_max))
-				print((etat_ini, lettre, etat_max))
-
-			else:
-				for e in expression:
-					if isinstance(e, list):
-						tmp = self.traitement_expression(e, etat_ini)
-						liste_etat_finaux_sous_automate += tmp
-						self.add_final_states(tmp)
-					elif not e in self.get_epsilons():
-						lettre = e
-						self.add_transition((etat_ini, lettre, etat_ini))
-						print((etat_ini, lettre, etat_max))
-					else:
-						print("Erreur : la liste de paramètres du \"*\" est mal formée")
-						return None
-				for e in liste_etat_finaux_sous_automate:
-					self.add_transition((e, "etoile", etat_ini))
-					print((etat_ini, "etoile", etat_max))
-		elif expression in self.get_epsilons():
-			print("Erreur : un \"*\" doit être suivi d'une liste")
-			return None
-		else:
-			self.add_transition((etat_ini, expression, etat_ini))
+		if not isinstance(expression, list):															# Si les paramètres ne sont pas dans une liste
+			if expression in operateurs:															# Si le paramètre est un  +, * ou .
+				print("Erreur : expression mal formée au niveau d'un \"*\"")									# On renvoie une erreur
+				return []
 			print((etat_ini, expression, etat_ini))
-		return [etat_ini]
+			self.add_transition((etat_ini, expression, etat_ini))											# Sinon on créé une boucle sur l'état courant
+			liste_etat_finaux_sous_automate = [etat_ini]													# Et on défini cet état comme l'état final du sous-automate
+		else:																							# Sinon (on a une liste)
+			if expression[0] in operateurs:														# Si le premier élément est un  +, * ou .
+				liste_etat_finaux_sous_automate = self.traitement_expression(expression, etat_ini)				# On stocke les états finaux du sous-automate créé dans cette liste
+			else:																							# Sinon
+				for lettre in expression:																		# Pour chaque élément de la liste
+					if isinstance(lettre, list):																	# Si c'est une liste
+						liste_etat_finaux_sous_automate += self.traitement_expression(lettre, etat_ini)					# On stocke les etat finaux du sous-automate de cette liste
+					else:																							# Sinon
+						if lettre in operateurs:																# Si c'est un +, * ou .
+							print("Erreur : expression mal formée au niveau d'un \"+\"")									#On renvoie un erreur
+							return []
+						print((etat_ini, lettre, etat_ini))
+						self.add_transition((etat_ini, lettre, etat_ini))												# Sinon on crée une boucle sur l'état courant avec la lettre obtenue
+			for etat in liste_etat_finaux_sous_automate:													# Pour chaque état final
+				print((etat_ini, "etoile", etat_ini))
+				self.add_transition((etat, "etoile", etat_ini))													# On ajoute une epsilon transition vers l'etat courant
+		return [etat_ini]																				# On retourne l'état traité
+						
+
+
 		
 
 	def traiter_concat_transition(self, expression, etat_ini):
 		liste_etat_finaux_sous_automate = [etat_ini]
-		if isinstance(expression, list):
-			for e in expression:
-				if isinstance(e, list):
-					for etat in liste_etat_finaux_sous_automate:
-						liste_etat_finaux_sous_automate = self.traitement_expression(e, etat)
-				else:
-					print("Erreur : la liste de paramètres du \".\" est mal formée")
-					return None
-		else:
-			print("Erreur : l'expression \".\" est mal formée")
-			return None
-		return liste_etat_finaux_sous_automate
+		if not isinstance(expression, list):															# Si il n'y a qu'un seul paramètre
+			print("Erreur : expression mal formée au niveau d'un \"*\"")									# On renvoie une erreur
+			return []
+		for param in expression:																		# Pour chacun des paramètres
+			if not isinstance(expression, list):															# Si le paramètre n'est pas une liste
+				print("Erreur : expression mal formée au niveau d'un \"*\"")									# On renvoie une erreur
+				return []
+			etats_courants = liste_etat_finaux_sous_automate
+			liste_etat_finaux_sous_automate = []															# On stocke les précédents états traités
+			for courant in etats_courants:																	# Pour tous les états stockés
+				liste_etat_finaux_sous_automate += self.traitement_expression(param, courant)					# On appelle traitement_expr, pour concaténer le paramètre suivant à tous les états traités
+																												# On ajoute les états renvoyés par traitement_expression
+		return liste_etat_finaux_sous_automate 															# On retourne les derniers états créés
+
+
+
+
 
 	def traitement_expression(self, expression, etat_ini=0):
 		liste_etat_finaux_sous_automate = []
-		if isinstance(expression, list):
-			if expression[0] in self.get_epsilons():
-				if expression[0] == "+":
-					if len(expression) > 2:
-						print("Erreur : un \"+\" doit être suivi d'une liste et d'une seule")
-						return None
-					tmp = self.get_maximal_id() + 1
-					self.add_transition((etat_ini, "plus", tmp))
-					print((etat_ini, "plus", tmp))
-					liste_etat_finaux_sous_automate += self.traiter_ou_transition(expression[1], tmp)
-
-
-				elif expression[0] == "*":
-					if len(expression) > 2:
-						print("Erreur : un \"*\" doit être suivi d'une liste et d'une seule")
-						return None
-					tmp = self.get_maximal_id() + 1
-					self.add_transition((etat_ini, "etoile", tmp))
-					print((etat_ini, "etoile", tmp))
-					liste_etat_finaux_sous_automate = self.traiter_etoile_transition(expression[1], tmp)
-					for e in liste_etat_finaux_sous_automate:
-						self.add_transition((e, "etoile", etat_ini))
-						print((e, "etoile", etat_ini))
-
-				elif expression[0] == ".":
-					tmp = self.get_maximal_id() + 1
-					self.add_transition((etat_ini, "concat", tmp))
-					print((etat_ini, "concat", tmp))
-					liste_etat_finaux_sous_automate = self.traiter_concat_transition(expression[1:], tmp)
-
-				
-			else:
-				for e in expression:
-					if not isinstance(e, list):
-						tmp = self.get_maximal_id() + 1
-						self.add_transition((etat_ini, e, tmp))
-						print((etat_ini, e, tmp))
-						liste_etat_finaux_sous_automate += [tmp]
-					else:
-						self.traitement_expression(e, etat_ini)
-			return liste_etat_finaux_sous_automate
-
+		etat_max = self.get_maximal_id() + 1
+		if not isinstance(expression, list):
+			print((etat_ini, expression, etat_max))
+			self.add_transition((etat_ini, expression, etat_max))
+			liste_etat_finaux_sous_automate = [etat_max]
+		elif expression[0] == "+":
+			if len(expression) > 2:
+				print("Erreur : expression + mal formée")
+				return []
+			print((etat_ini, "plus", etat_max))
+			self.add_transition((etat_ini, "plus", etat_max))
+			liste_etat_finaux_sous_automate = self.traiter_ou_transition(expression[1], etat_max)
+		elif expression[0] == "*":
+			if len(expression) > 2:
+				print("Erreur : expression * mal formée")
+				return []
+			liste_etat_finaux_sous_automate = self.traiter_etoile_transition(expression[1], etat_ini)
+		elif expression[0] == ".":
+			print((etat_ini, "concat", etat_max))
+			self.add_transition((etat_ini, "concat", etat_max))
+			liste_etat_finaux_sous_automate = self.traiter_concat_transition(expression[1:], etat_max)
 		else:
-			print("Erreur : expression mal formée")
-			return None
+			for e in expression:
+				if isinstance(e, list):
+					liste_etat_finaux_sous_automate += self.traitement_expression(e, etat_ini)
+				else:
+					print((etat_ini, e, etat_max))
+					self.add_transition((etat_ini, e, etat_max))
+					liste_etat_finaux_sous_automate += [etat_max]
+					etat_max = self.get_maximal_id() + 1
+		# self.add_final_states(liste_etat_finaux_sous_automate)
+		return liste_etat_finaux_sous_automate
+
+
 		"""
 		Traitement des deux autres operateurs
 
@@ -511,13 +459,13 @@ class startautomaton(automaton):
 
 	@staticmethod
 	def express_to_auto(expression):
-		operateurs = [".", "concat", "+", "plus", "*", "etoile"]
+		transitions_operateurs = ["concat", "plus", "etoile"]
 		automate_tmp = startautomaton(
 			initials =[0],
-			epsilons = operateurs
+			epsilons = transitions_operateurs
 			)
 
-		automate_tmp.traitement_expression(expression)
+		automate_tmp.add_final_states(automate_tmp.traitement_expression(expression))
 
 
 
@@ -586,9 +534,26 @@ if __name__ == "__main__":
 """
 	TO DO
 """
-expression_humain = ""
-expression = ["*", ["+", ["a", [".", ["*","b"], ["a"]]]]]
+expression_humain = "aa(a + ab)∗ b"
+expression = [".", 
+				["a"], 
+				["a"], 
+				["*",  
+					["+", 
+						[ "a", 	[".", 
+									["a"], 
+									["b"] 
+								] 
+						] 
+					] 
+				], 
+				["b"] 
+			] 
+
 
 
 startautomaton.express_to_auto(expression).display("Automate", False)
-startautomaton.express_to_auto(expression).minimiser(True).display("Automate", False)
+a = startautomaton.express_to_auto(expression).minimiser(True)
+a.display("Automate minise", False)
+a.renumber_the_states()
+a.display("Automate final")
