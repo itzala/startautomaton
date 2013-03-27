@@ -1,38 +1,156 @@
 \documentclass[a4paper, 12pt]{report}
  
-\usepackage[utf8]{inputenc} % un package
-\usepackage[T1]{fontenc}      % un second package
-\usepackage[francais]{babel}  % un troisième package
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[francais]{babel}
+\usepackage[top=2cm, bottom=2cm, left=4cm, right=2cm]{geometry}
+
+
+\title{Rapport de projet : StartAutomaton}
+\author{Nicolas \bsc{Endredi}, Baptiste \bsc{Oruezabal}}
+\date{\today}
+
+
 \begin{document}
 
-\chapter{StartAutomaton}
+\maketitle
+
+
+\setcounter{tocdepth}{3}
+\tableofcontents
+
+\newpage
 \section{Présentation du projet}
 \subsection{Automates et expressions rationnelles}
+Les expressions rationnelles sont une manière très simples de décrire un langage, notamment des langages définis récursivement. Cependant cette représentation n'est pas pratique pour implémenter des programmes analysant le langage. 
+On utilise donc des automates, créés à partir de ces expressions. On sait, d'après le théorème de Kleene, qu'un langage est reconnu par un automate si et seulement si il peut être décrit par une expression rationnelle.
+Ainsi toutes les expressions rationnelles traitées durant ce projet, ont un automate correspondant.
 \subsection{La bibliothèque Automaton}
+La bibliothèque Python "Automaton" implémente l'objet "automaton" qui est un automate simple : on peut lui définir son alphabet, ses états, ses états (notamment initiaux et finaux) et ses transitions.\\
+Pour représenter les "epsilon transitions" , on peut définir des caractères qui seront traités comme des "epsilon".
 \subsection{Sujet du projet}
+Le but du projet est d'ajouter des fonctionnalités à la bibliothèque "Automaton" en utilisant des algorithmes vus dans le cours d'Informatique Théorique. Ces fonctionnalités sont des manipulations d'automate ainsi que la conversion d'une expression rationnelle en automate
 
+\newpage
 \section{Fonctionnalités de StartAutomaton}
-\subsection{Affichage}
-\subsection{Tests}
-\subsection{Sélecteurs et éditeurs}
-\subsection{Manipulation d'automates}
-\subsection{Conversions}
+Ici sont listées les différentes fonctionnalités implémentées dans StartAutomaton. Celles demandées dans le sujet apparaissent dans la table des matière.
 
+
+\subsection{Affichage}
+\subsubsection*{Afficher l'alphabet de l'automate}
+Affiche un "pretty set" contenant l'alphabet de l'automate
+\subsubsection*{Afficher toutes les transitions de l'automate}
+Affiche un "pretty set" contenant toutes transitions de l'automate
+\subsubsection*{Afficher tous les états de l'automate}
+Affiche un "pretty set" contenant tous les états de l'automate
+\subsubsection*{Afficher les caractères epsilon}
+Affiche un "pretty set" contenant les caractères qui représentent epsilon dans l'automate
+\subsubsection*{Afficher les états finaux}
+Affiche un "pretty set" contenant tous les états finaux de l'automate
+\subsubsection*{Afficher les état initiaux}
+Affiche un "pretty set" contenant tous les états initiaux de l'automate
+
+\subsection{Tests}
+\subsubsection*{Tester si l'automate est déterministe}
+On renvoie un booléen signifiant si l'automate est déterministe ou non
+\subsubsection*{Tester si l'automate est complet}
+On renvoie un booléen signifiant si l'automate est complet ou non
+
+\subsection{Sélecteurs et éditeurs}
+\subsubsection*{Obtenir l'origine d'une transition}
+On renvoie l'état à l'origine d'une transition donnée
+\subsubsection*{Obtenir la destination d'une transition}
+On renvoie l'état de destination d'une transition donnée
+\subsubsection*{Obtenir les epsilon transitions de l'automate}
+On renvoie la liste des transitions avec un caractère codant l'epsilon
+\subsubsection*{Supprimer un état initial donné de l'automate}
+On enlève l'état de la liste des états initiaux de l'automate (ne supprime pas l'état de la liste d'états et ne supprime pas les transitions dans lesquelles il est présent)
+\subsubsection*{Supprimer un état final donné de l'automate}
+On enlève l'état de la liste des états finaux de l'automate (ne supprime pas l'état de la liste d'états et ne supprime pas les transitions dans lesquelles il est présent)
+\subsubsection*{Supprimer un transition donnée de l'automate}
+On enlève la transition de la liste des transitions de l'automate (ne supprime pas les états de la liste d'états)
+\subsubsection*{Supprimer tous les états initiaux de l'automate}
+On vide la liste des états initiaux de l'automate
+\subsubsection*{Supprimer tous les états finaux de l'automate}
+On vide la liste des états finaux de l'automate
+\subsubsection*{Supprimer toutes les transitions de l'automate}
+On vide le dictionnaire stockant les transitions
+\subsubsection*{Supprimer toutes les epsilon transitions (avec réagencement des autres transitions)}
+On supprime les transitions par un caractère encodant epsilon, sans pour autant changer le langage reconnu par l'automate
+
+\subsection{Manipulation d'automates}
+\subsubsection{Compléter}
+On construit un état puits. Ensuite on ajoute pour chaque état les transitions par les lettres de l'alphabet qu'il lui manque. Ces transitions se font vers l'état puits.
+\subsubsection{Déterminiser}
+On fusionne des états de l'automate afin que tous les états n'aient pas deux transitions sortantes avec la même et qu'il n'y ait qu'un seul état initial
+\subsubsection{Miroir}
+On inverse les état finaux et initiaux, puis on renverse les transitions
+\subsubsection{Union de deux automates}
+On fait l'union de deux automates déterminisés (si non déterministes) et complétés (si non complets)
+\subsubsection{Intersection de deux automates}
+On fait l'intersection de deux automates déterminisés (si non déterministes) et complétés (si non complets)
+\subsubsection{Complément}
+On crée l'automate permettant de compléter l'automate original
+\subsubsection{Minimiser}
+On minimise l'automate. On crée donc le plus petit automate reconnaissant le même langage que l'automate d'origine
+
+\subsection{Conversions et utilitaire}
+\subsubsection{Conversion d'une expression rationnelle en automate}
+On créé l'automate permettant de reconnaître le langage décrit par l'expression rationnelle donnée
+\subsubsection*{Reconnaitre l'opérateur et l'action à réaliser pour une expression}
+Si l'expression commence par un opérateur, on créé un sous automate avec une des fonctionnalités ci-dessus.\\
+Sinon, on créé juste une transition depuis l'état donné en paramètre vers un nouvel état, par la lettre lue
+\subsubsection*{Créer un sous automate à partir d'un "+" lu précédemment dans l'expression}
+On créé un sous automate à partir de l'expression en paramètre et renvoie tous les états finaux construits par ce sous automate
+\subsubsection*{Créer un sous automate à partir d'une "*" lue précédemment dans l'expression}
+On créé un sous automate à partir de l'expression en paramètre et renvoie l'état initial comme état final
+\subsubsection*{Créer un sous automate à partir d'une "." lu précédemment dans l'expression}
+On créé un sous automate à partir de l'expression en paramètre et renvoie le dernier état final construit par ce sous automate
+
+\subsubsection*{Renverser un tuple à trois éléments}
+On inverse le premier et le dernier élément sans toucher au deuxième
+
+
+
+\newpage
 \section{Problèmes rencontrés}
 \subsection{La bibliothèque Automaton}
-\subsection{Méthodes de manipulation d'automates}
-\subsubsection{Union et intersection}
-\subsubsection{Déterminiser}
-\subsubsection{Minimiser}
-\subsubsection{Conversion d'une expression rationnelle vers un automate}
-\subsubsection{Conversion d'une expression rationnelle en préfixée}
+Le temps nécessaire à la compréhension de toutes les méthodes implémentées par la bibliothèque Automaton a été considérable. Notamment pour comprendre les types d'objets utilisés pour stocker les propriétés d'un automate.
 
+De plus la méthode "remove\_epsilon\_transitions()" était ambiguë : elle supprimait les caractères encodant epsilon, sans modifier les transitions elles-mêmes.\\
+Nous avons donc décidé de la redéfinir, pour qu'elle supprime les epsilon transitions, sans modifier le langage reconnu par l'automate.\\
+Nous avons aussi ajouté la méthode "remove\_epsilons()" pour supprimer les caractères représentant epsilon.
+
+
+\subsection{Méthodes de manipulation d'automates}
+\subsubsection{Déterminiser}
+Cette méthode étant la base de nombreux algorithmes de manipulation d'automates, elle nous a demandé beaucoup plus de temps et de réflexion. Elle est aussi celle qui a nécessité le plus de tests.
+
+\subsubsection{Minimiser}
+Une première version de minimiser a été tentée sans utiliser le double renversement, mais cette version de la méthode ne fonctionnait pas pour tous les automates. Nous l'avons donc abandonnée au profit du double renversement, plus clair et plus simple à implémenter
+
+\subsubsection{Conversion d'une expression rationnelle vers un automate}
+Cette méthode a été rapide à coder, mais longue à concevoir.\\
+Nous avons étudié l'algorithme de Thomson et essayé de concevoir un algorithme, qui n'aurait pas besoin d'autant d'epsilon transitions.\\
+Malgré de nombreux essais, la version définitive semble correctement fonctionner pour tous les cas que nous avons testés.
+
+\subsubsection{Conversion d'une expression rationnelle en préfixée}
+Par manque de temps, nous avons préféré ne pas implémenter cette fonctionnalité, pour nous concentrer sur la re-factorisation de notre code et sa documentation.
+
+
+
+\newpage
 \section{Projection}
 \subsection{Implémentation de la conversion d'une expression rationnelle en préfixée}
+L'implémentation de cette fonctionnalité devrait prendre moins d'une semaine selon nos calculs. Ainsi nous essaierons de l'implémenter avant la soutenance de ce projet
+
 \subsection{Création de classes utilisables par StartAutomaton}
+Lors de la re-factorisation du code, nous avons remarqué que certaines actions méritent d'avoir une classe propre pour augmenter la lisibilité du code
+
+
 
 \section{Conclusion}
-\subsection{Aboutissement du projet}
-\subsection{Outils et méthodes de travail découvertes}
-
+Presque toutes les fonctionnalités demandés ont été implémentées avec un code bien lisible et des fonctionnalités utiles ont été ajoutées. De plus la plus part des méthodes on été factorisées afin d'en améliorer la lisibilité. Ainsi nous pensons avoir respecté les demandes du sujet.\\
+Cependant, on a pu constater qu'il y a de nombreuses optimisations à faire dans les algorithmes que ce soit au niveau du temps ou de la mémoire utilisée, mais, le temps ne nous le permettant pas, nous laissons cela au soin d'autres développeurs qui voudraient améliorer notre classe StartAutomaton
+	
 \end{document}
