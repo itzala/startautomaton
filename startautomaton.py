@@ -1,6 +1,5 @@
 from automaton import *
 from collections import deque
-from operator import itemgetter
 	
 
 def get_origine_trans(transition):
@@ -215,7 +214,7 @@ class startautomaton(automaton):
 		"""
 		Supprime les caractères encodant les epsilon transitions.
 		"""
-		automaton.remove_epsilon_transitions()
+		super(startautomaton, self).remove_epsilon_transitions()
 
 # Fonctions pour gérer les différentes actions sur l'automate
 
@@ -239,7 +238,7 @@ class startautomaton(automaton):
 		self.est_deterministe()
 
 		if destructif:
-			automate_clone.reconstruction(automate_tmp)
+			self.reconstruction(automate_tmp)
 			
 
 		return automate_tmp
@@ -267,9 +266,9 @@ class startautomaton(automaton):
 		epsilons = self.get_epsilons())
 
 		if destructif:
-			automate_clone = self.clone()
-		else:
 			automate_clone = self
+		else:
+			automate_clone = self.clone()
 
 		automate_clone.remove_epsilon_transitions()
 		finaux = automate_clone.get_final_states()											# On récupère les etats finaux
@@ -344,20 +343,16 @@ class startautomaton(automaton):
 		# On travaille sur des automates deterministes
 		if not aut2.est_deterministe():
 			aut2 = aut2.determinisation()
-			assert aut2._est_deterministe, "L'automate passe en parametre ne peut pas etre determinise"
 			
 		if not self.est_deterministe():
 			self.determinisation(destructif)
-			assert self._est_deterministe, "Le premier automate ne peut pas etre determinise"
 		
 		# On travaille sur des automates complet
 		if not aut2.est_complet():
 			aut2 = aut2.completer()
-			assert aut2._est_complet, "L'automate passe en parametre ne peut pas etre complete"
 
 		if not self.est_complet():
 			self.completer(destructif)		
-			assert self._est_complet, "Le premier automate ne peut pas etre complete"
 
 		automate_tmp = startautomaton(
 			alphabet = self.get_alphabet(),
@@ -386,6 +381,7 @@ class startautomaton(automaton):
 					if not l in self.get_epsilons():
 						delta_etat_1 = self._delta(l, [etat_1])
 						delta_etat_2 =  aut2._delta(l, [etat_2])
+						nouveau = set()
 						for e1 in delta_etat_1:
 							for e2 in delta_etat_2:
 								nouveau = (e1,e2)
@@ -416,20 +412,16 @@ class startautomaton(automaton):
 		# On travaille sur des automates deterministes
 		if not aut2.est_deterministe():
 			aut2 = aut2.determinisation()
-			assert aut2._est_deterministe, "L'automate passe en parametre ne peut pas etre determinise"
 			
 		if not self.est_deterministe():
 			self.determinisation(destructif)
-			assert self._est_deterministe, "Le premier automate ne peut pas etre determinise"
 		
 		# On travaille sur des automates complet
 		if not aut2.est_complet():
 			aut2 = aut2.completer()
-			assert aut2._est_complet, "L'automate passe en parametre ne peut pas etre complete"
 
 		if not self.est_complet():
 			self.completer(destructif)		
-			assert self._est_complet, "Le premier automate ne peut pas etre complete"
 
 		automate_tmp = startautomaton(
 			alphabet = self.get_alphabet(),
@@ -458,6 +450,7 @@ class startautomaton(automaton):
 					if not l in self.get_epsilons():
 						delta_etat_1 = self._delta(l, [etat_1])
 						delta_etat_2 =  aut2._delta(l, [etat_2])
+						nouveau = set()
 						for e1 in delta_etat_1:
 							for e2 in delta_etat_2:
 								nouveau = (e1,e2)
@@ -627,7 +620,8 @@ class startautomaton(automaton):
 			epsilons = transitions_operateurs
 			)
 		automate_tmp.add_final_states(automate_tmp.traitement_expression(expression))
-
+		automate_tmp.reconstruction(automate_tmp.minimiser(True))
+		automate_tmp.renumber_the_states()
 		return automate_tmp
 
 # Main pour tester
@@ -641,7 +635,6 @@ if __name__ == "__main__":
 		states = [], initials = [0,1], finals = [3,4],
 		transitions=[(0,'a',1), (1,'b',2), (2,'b',2), (2,'b',3), (3,'a',4), (4, 'a', 5), (4, 'a', 1)]
 	)
-
 	b = startautomaton(
 		alphabet,
 		epsilons,
@@ -649,7 +642,59 @@ if __name__ == "__main__":
 		transitions=[(0,'a',1), (1,'b',2), (2,'b',2), (5, 'a',3), (3,'b',2), (3,'b',4), (2, 'a', 5), (4, 'a', 2)]
 	)
 
-expression = "aa(a + ab)∗ b"
+a.display("Voici l'automate A", False)
+a.print_alphabet()
+a.print_epsilons()
+a.print_etats()
+a.print_etats_initiaux()
+a.print_etats_finaux()
+a.print_transitions()
+
+print("L'automate a est-il deterministe ?\n", a.est_deterministe())
+
+print("L'automate A est-il complet ?\n", a.est_complet())
+
+tmp = a.clone()
+tmp.remove_epsilons()
+tmp.print_epsilons()
+tmp.display("L'automate A sans caracteres epsilon")
+
+tmp = a.clone()
+tmp.remove_initial_states()
+tmp.print_etats_initiaux()
+tmp.display("L'automate A sans etats initiaux")
+
+tmp = a.clone()
+tmp.remove_final_states()
+tmp.print_etats_finaux()
+tmp.display("L'automate A sans etats finaux")
+
+tmp = a.clone()
+tmp.remove_transitions()
+tmp.print_transitions()
+tmp.display("L'automate A sans transitions")
+
+tmp = a.clone()
+tmp.remove_epsilon_transitions()
+tmp.print_epsilons()
+tmp.display("L'automate A sans transitions epsilon")
+
+
+a.completer(False).display("L'automate A complet", False)
+a.determinisation(False).display("L'automate A determinise")
+a.miroir(False).display("Le miroir de l'automate A", False)
+a.minimiser(False).display("L'automate A minimise")
+a.complement(False).display("Complement de A")
+
+a.display("Revoici l'automate A", False)
+b.display("Voici l'automate B", False)
+
+a.union(b, False).display("Voici l'union de A et B")
+a.display("Revoici l'automate A", False)
+b.display("Revoici l'automate B", False)
+a.intersection(b, False).display("Voici l'intersection de A et B")
+
+expression = "aa(a + ab)* b"
 expression_prefixee = [".", 
 				["a"], 
 				["a"], 
@@ -664,4 +709,8 @@ expression_prefixee = [".",
 				], 
 				["b"] 
 			]
-startautomaton.express_to_auto(expression_prefixee).display()
+
+print("Et pour finir, l'automate minimal de l'expression : ", expression)
+startautomaton.express_to_auto(expression_prefixee).display("Automate minimal correspondant a une expression prefixee (cf code)")
+
+print("FIN !")
