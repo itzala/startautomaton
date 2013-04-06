@@ -238,7 +238,7 @@ class startautomaton(automaton):
 		self.est_deterministe()
 
 		if destructif:
-			automate_clone.reconstruction(automate_tmp)
+			self.reconstruction(automate_tmp)
 			
 
 		return automate_tmp
@@ -266,9 +266,9 @@ class startautomaton(automaton):
 		epsilons = self.get_epsilons())
 
 		if destructif:
-			automate_clone = self.clone()
-		else:
 			automate_clone = self
+		else:
+			automate_clone = self.clone()
 
 		automate_clone.remove_epsilon_transitions()
 		finaux = automate_clone.get_final_states()											# On récupère les etats finaux
@@ -354,47 +354,56 @@ class startautomaton(automaton):
 		if not self.est_complet():
 			self.completer(destructif)		
 
+		alphabet_courant = self.get_alphabet()
 		automate_tmp = startautomaton(
-			alphabet = self.get_alphabet(),
+			alphabet = alphabet_courant,
 			epsilons = self.get_epsilons())
-		finaux = (self.get_final_states()).union(aut2.get_final_states())
+		finaux_1 = self.get_final_states()
+		finaux_2 = aut2.get_final_states()
 		
 		# Création états initiaux de l'automate de l'union
 
-		pile_etats = []
 
-		etat_1 , etat_2 = 0 , 0
 		for ini_1 in self.get_initial_states():
 			for ini_2 in aut2.get_initial_states():
 				etat = (ini_1, ini_2)
-				etat_1 = ini_1
-				etat_2 = ini_2
 				automate_tmp.add_initial_state(etat)
-				pile_etats.append(etat)
 
 		# Création de l'automate des couples (automate de l'union)
-		while len(pile_etats) > 0:
-			etat_courant = pile_etats.pop()
-			if not etat_courant == set():
-				etat_1, etat_2 = etat_courant
-				for l in self.get_alphabet():
-					if not l in self.get_epsilons():
-						delta_etat_1 = self._delta(l, [etat_1])
-						delta_etat_2 =  aut2._delta(l, [etat_2])
-						nouveau = set()
-						for e1 in delta_etat_1:
-							for e2 in delta_etat_2:
-								nouveau = (e1,e2)
-						
-						if not nouveau == set():
-							if not nouveau in automate_tmp.get_states():
-								pile_etats.append(nouveau)
-							for e in nouveau:								
-								if e in finaux:
-									automate_tmp.add_final_state(nouveau)
-									break
+		for etat_1 in self.get_states():
+			for etat_2 in aut2.get_states():
+				automate_tmp.add_state((etat_1, etat_2))
+				for lettre in alphabet_courant:
+					for dest_1 in self.delta(lettre, [etat_1]):
+						for dest_2 in aut2.delta(lettre, [etat_2]):
+							automate_tmp.add_transition(((etat_1, etat_2), lettre, (dest_1, dest_2)))
+				if etat_1 in finaux_1 or etat_2 in finaux_2:
+					automate_tmp.add_final_state((etat_1, etat_2))
 
-							automate_tmp.add_transition((etat_courant, l, nouveau))
+					
+		################## ANCIENNE IMPLÉMENTATION ##################################
+		# while len(pile_etats) > 0:
+		# 	etat_courant = pile_etats.pop()
+		# 	if not etat_courant == set():
+		# 		etat_1, etat_2 = etat_courant
+		# 		for l in self.get_alphabet():
+		# 			if not l in self.get_epsilons():
+		# 				delta_etat_1 = self._delta(l, [etat_1])
+		# 				delta_etat_2 =  aut2._delta(l, [etat_2])
+		# 				nouveau = set()
+		# 				for e1 in delta_etat_1:
+		# 					for e2 in delta_etat_2:
+		# 						nouveau = (e1,e2)
+						
+		# 				if not nouveau == set():
+		# 					if not nouveau in automate_tmp.get_states():
+		# 						pile_etats.append(nouveau)
+		# 					for e in nouveau:								
+		# 						if e in finaux:
+		# 							automate_tmp.add_final_state(nouveau)
+		# 							break
+
+		# 					automate_tmp.add_transition((etat_courant, l, nouveau))
 
 		if destructif:
 			self.reconstruction(automate_tmp)
@@ -423,49 +432,58 @@ class startautomaton(automaton):
 		if not self.est_complet():
 			self.completer(destructif)		
 
+		alphabet_courant = self.get_alphabet()
 		automate_tmp = startautomaton(
-			alphabet = self.get_alphabet(),
+			alphabet = alphabet_courant,
 			epsilons = self.get_epsilons())
-		finaux = (self.get_final_states()).union(aut2.get_final_states())
+		finaux_1 = self.get_final_states()
+		finaux_2 = aut2.get_final_states()
 		
 		# Création états initiaux de l'automate de l'union
 
-		pile_etats = []
 
-		etat_1 , etat_2 = 0 , 0
 		for ini_1 in self.get_initial_states():
 			for ini_2 in aut2.get_initial_states():
 				etat = (ini_1, ini_2)
-				etat_1 = ini_1
-				etat_2 = ini_2
 				automate_tmp.add_initial_state(etat)
-				pile_etats.append(etat)
 
 		# Création de l'automate des couples (automate de l'union)
-		while len(pile_etats) > 0:
-			etat_courant = pile_etats.pop()
-			if not etat_courant == set():
-				etat_1, etat_2 = etat_courant
-				for l in self.get_alphabet():
-					if not l in self.get_epsilons():
-						delta_etat_1 = self._delta(l, [etat_1])
-						delta_etat_2 =  aut2._delta(l, [etat_2])
-						nouveau = set()
-						for e1 in delta_etat_1:
-							for e2 in delta_etat_2:
-								nouveau = (e1,e2)
+		for etat_1 in self.get_states():
+			for etat_2 in aut2.get_states():
+				automate_tmp.add_state((etat_1, etat_2))
+				for lettre in alphabet_courant:
+					for dest_1 in self.delta(lettre, [etat_1]):
+						for dest_2 in aut2.delta(lettre, [etat_2]):
+							automate_tmp.add_transition(((etat_1, etat_2), lettre, (dest_1, dest_2)))
+				if etat_1 in finaux_1 and etat_2 in finaux_2:
+					automate_tmp.add_final_state((etat_1, etat_2))
+
+
+		################## ANCIENNE IMPLÉMENTATION ##################################
+		# while len(pile_etats) > 0:
+		# 	etat_courant = pile_etats.pop()
+		# 	if not etat_courant == set():
+		# 		etat_1, etat_2 = etat_courant
+		# 		for l in self.get_alphabet():
+		# 			if not l in self.get_epsilons():
+		# 				delta_etat_1 = self._delta(l, [etat_1])
+		# 				delta_etat_2 =  aut2._delta(l, [etat_2])
+		# 				nouveau = set()
+		# 				for e1 in delta_etat_1:
+		# 					for e2 in delta_etat_2:
+		# 						nouveau = (e1,e2)
 						
-						if not nouveau == set():
-							if not nouveau in automate_tmp.get_states():
-								pile_etats.append(nouveau)
-							final = True
-							for e in nouveau:								
-								if not e in finaux:
-									final = False
-									break
-							if final:
-								automate_tmp.add_final_state(nouveau)
-							automate_tmp.add_transition((etat_courant, l, nouveau))
+		# 				if not nouveau == set():
+		# 					if not nouveau in automate_tmp.get_states():
+		# 						pile_etats.append(nouveau)
+		# 					final = True
+		# 					for e in nouveau:								
+		# 						if not e in finaux:
+		# 							final = False
+		# 							break
+		# 					if final:
+		# 						automate_tmp.add_final_state(nouveau)
+		# 					automate_tmp.add_transition((etat_courant, l, nouveau))
 		if destructif:
 			self.reconstruction(automate_tmp)
 
@@ -477,11 +495,15 @@ class startautomaton(automaton):
 		Par défaut, la méthode ne modifie pas l'automate
 		"""
 		automate_tmp = self.clone()
+		# On complète et déterminise l'automate
 		automate_tmp.completer()
 		automate_tmp.determinisation(True)
+		# On récupère la liste des etats non finaux pour les rendre finaux
 		finaux = automate_tmp.get_states() - automate_tmp.get_final_states()
 
+		# On rend les états finaux, non finaux
 		automate_tmp.remove_final_states()
+		# On rend les autres états finaux
 		automate_tmp.add_final_states(finaux)
 		if destructif:
 			self.reconstruction(automate_tmp)
@@ -633,13 +655,7 @@ if __name__ == "__main__":
 		alphabet,
 		epsilons,
 		states = [], initials = [0,1], finals = [3,4],
-		transitions=[(0,'a',1), (1,'b',2), (2,'b',2), (2,'b',3), (3,'a',4), (4, 'a', 5), (4, 'a', 1)]
-	)
-	b = startautomaton(
-		alphabet,
-		epsilons,
-		states = [], initials = [0], finals = [4],
-		transitions=[(0,'a',1), (1,'b',2), (2,'b',2), (5, 'a',3), (3,'b',2), (3,'b',4), (2, 'a', 5), (4, 'a', 2)]
+		transitions=[(0,'a',1), (0, '0', 0), (1,'b',2), (2,'b',2), (2,'b',3), (3,'a',4), (4, 'a', 5), (4, 'a', 1)]
 	)
 
 a.display("Voici l'automate A", False)
@@ -655,26 +671,31 @@ print("L'automate a est-il deterministe ?\n", a.est_deterministe())
 print("L'automate A est-il complet ?\n", a.est_complet())
 
 tmp = a.clone()
+print("\nOn enlève les epsilons (remove_epsilons())")
 tmp.remove_epsilons()
 tmp.print_epsilons()
-tmp.display("L'automate A sans caracteres epsilon")
+tmp.display("L'automate A sans caracteres encodant epsilon")
 
 tmp = a.clone()
+print("\nOn enlève les etats intiaux")
 tmp.remove_initial_states()
 tmp.print_etats_initiaux()
 tmp.display("L'automate A sans etats initiaux")
 
 tmp = a.clone()
+print("\nOn enlève les etats finaux")
 tmp.remove_final_states()
 tmp.print_etats_finaux()
 tmp.display("L'automate A sans etats finaux")
 
 tmp = a.clone()
+print("\nOn enlève les transitions")
 tmp.remove_transitions()
 tmp.print_transitions()
 tmp.display("L'automate A sans transitions")
 
 tmp = a.clone()
+print("\nOn enlève les epsilon transitions")
 tmp.remove_epsilon_transitions()
 tmp.print_epsilons()
 tmp.display("L'automate A sans transitions epsilon")
@@ -686,12 +707,23 @@ a.miroir(False).display("Le miroir de l'automate A", False)
 a.minimiser(False).display("L'automate A minimise")
 a.complement(False).display("Complement de A")
 
-a.display("Revoici l'automate A", False)
+b = startautomaton(
+		alphabet= ['a','b','c'],
+		epsilons=[],
+		states = [], initials = [1], finals = [2],
+		transitions=[(1,'a',1), (1,'b',1), (1,'c',2), (2,'a',2), (2,'b',2), (2, 'c', 2)]
+	)
+
+a = startautomaton(
+		alphabet= ['a','b','c'],
+		epsilons=[],
+		states = [], initials = [1], finals = [3],
+		transitions=[(1,'a',1), (1,'c',1), (1,'b',2), (2,'b',2), (2, 'c', 1), (2, 'a', 3), (3,'a',3), (3,'b',3), (3, 'c', 3)]
+	)
+a.display("Voici le nouvel automate A", False)
 b.display("Voici l'automate B", False)
 
 a.union(b, False).display("Voici l'union de A et B")
-a.display("Revoici l'automate A", False)
-b.display("Revoici l'automate B", False)
 a.intersection(b, False).display("Voici l'intersection de A et B")
 
 expression = "aa(a + ab)* b"
@@ -711,6 +743,6 @@ expression_prefixee = [".",
 			]
 
 print("Et pour finir, l'automate minimal de l'expression : ", expression)
-startautomaton.express_to_auto(expression_prefixee).display()
+startautomaton.express_to_auto(expression_prefixee).display("Automate minimal correspondant a une expression prefixee (cf code)")
 
 print("FIN !")
