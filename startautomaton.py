@@ -380,7 +380,7 @@ class startautomaton(automaton):
 				if etat_1 in finaux_1 or etat_2 in finaux_2:
 					automate_tmp.add_final_state((etat_1, etat_2))
 
-					
+
 		################## ANCIENNE IMPLÉMENTATION ##################################
 		# while len(pile_etats) > 0:
 		# 	etat_courant = pile_etats.pop()
@@ -522,13 +522,16 @@ class startautomaton(automaton):
 		if not isinstance(expression, list):														# Si les paramètres d'une ou transition ne sont pas dans un liste
 			print("Erreur : expression mal formée au niveau d'un \"+\"")							# On renvoie une erreur
 			return []
+		if len(expression) < 2:																		# Si les paramètres d'une ou transition ne sont une liste à un élément
+			print("Erreur : expression mal formée au niveau d'un \"+\"")							# On renvoie une erreur
+			return []
 		if expression[0] in operateurs:																# Si le premier élément de la liste est +, * ou .
 			liste_etat_finaux_sous_automate = self.traitement_expression(expression[1], etat_ini)			# On appelle traitement_expression pour l'etat courant et la liste
-		else:																						# Sinon
-			for lettre in expression:																# On prend chaque élément de la liste des paramètres
-				if not isinstance(lettre, list):														# Si ce n'est pas une liste
-					if lettre in operateurs:														# Si c'est un +, * ou .
-						print("Erreur : expression mal formée au niveau d'un \"+\"")							#On renvoie un erreur
+		else:																							# Sinon
+			for lettre in expression:																	# On prend chaque élément de la liste des paramètres
+				if not isinstance(lettre, list):															# Si ce n'est pas une liste
+					if lettre in operateurs:															# Si c'est un +, * ou .
+						print("Erreur : expression mal formée au niveau d'un \"+\"")						#On renvoie un erreur
 						return []	
 					etat_max = self.get_maximal_id() + 1													# Sinon
 					self.add_transition((etat_ini, lettre, etat_max))											# On fait une transition depuis l'etat courant vers un nouvel etat par la lettre traitée
@@ -646,6 +649,8 @@ class startautomaton(automaton):
 		automate_tmp.renumber_the_states()
 		return automate_tmp
 
+
+
 # Main pour tester
 
 if __name__ == "__main__":
@@ -658,89 +663,89 @@ if __name__ == "__main__":
 		transitions=[(0,'a',1), (0, '0', 0), (1,'b',2), (2,'b',2), (2,'b',3), (3,'a',4), (4, 'a', 5), (4, 'a', 1)]
 	)
 
-a.display("Voici l'automate A", False)
-a.print_alphabet()
-a.print_epsilons()
-a.print_etats()
-a.print_etats_initiaux()
-a.print_etats_finaux()
-a.print_transitions()
+# a.display("Voici l'automate A", False)
+# a.print_alphabet()
+# a.print_epsilons()
+# a.print_etats()
+# a.print_etats_initiaux()
+# a.print_etats_finaux()
+# a.print_transitions()
 
-print("L'automate a est-il deterministe ?\n", a.est_deterministe())
+# print("L'automate a est-il deterministe ?\n", a.est_deterministe())
 
-print("L'automate A est-il complet ?\n", a.est_complet())
+# print("L'automate A est-il complet ?\n", a.est_complet())
 
-tmp = a.clone()
-print("\nOn enlève les epsilons (remove_epsilons())")
-tmp.remove_epsilons()
-tmp.print_epsilons()
-tmp.display("L'automate A sans caracteres encodant epsilon")
+# tmp = a.clone()
+# print("\nOn enlève les epsilons (remove_epsilons())")
+# tmp.remove_epsilons()
+# tmp.print_epsilons()
+# tmp.display("L'automate A sans caracteres encodant epsilon")
 
-tmp = a.clone()
-print("\nOn enlève les etats intiaux")
-tmp.remove_initial_states()
-tmp.print_etats_initiaux()
-tmp.display("L'automate A sans etats initiaux")
+# tmp = a.clone()
+# print("\nOn enlève les etats intiaux")
+# tmp.remove_initial_states()
+# tmp.print_etats_initiaux()
+# tmp.display("L'automate A sans etats initiaux")
 
-tmp = a.clone()
-print("\nOn enlève les etats finaux")
-tmp.remove_final_states()
-tmp.print_etats_finaux()
-tmp.display("L'automate A sans etats finaux")
+# tmp = a.clone()
+# print("\nOn enlève les etats finaux")
+# tmp.remove_final_states()
+# tmp.print_etats_finaux()
+# tmp.display("L'automate A sans etats finaux")
 
-tmp = a.clone()
-print("\nOn enlève les transitions")
-tmp.remove_transitions()
-tmp.print_transitions()
-tmp.display("L'automate A sans transitions")
+# tmp = a.clone()
+# print("\nOn enlève les transitions")
+# tmp.remove_transitions()
+# tmp.print_transitions()
+# tmp.display("L'automate A sans transitions")
 
-tmp = a.clone()
-print("\nOn enlève les epsilon transitions")
-tmp.remove_epsilon_transitions()
-tmp.print_epsilons()
-tmp.display("L'automate A sans transitions epsilon")
+# tmp = a.clone()
+# print("\nOn enlève les epsilon transitions")
+# tmp.remove_epsilon_transitions()
+# tmp.print_epsilons()
+# tmp.display("L'automate A sans transitions epsilon")
 
 
-a.completer(False).display("L'automate A complet", False)
-a.determinisation(False).display("L'automate A determinise")
-a.miroir(False).display("Le miroir de l'automate A", False)
-a.minimiser(False).display("L'automate A minimise")
-a.complement(False).display("Complement de A")
+# a.completer(False).display("L'automate A complet", False)
+# a.determinisation(False).display("L'automate A determinise")
+# a.miroir(False).display("Le miroir de l'automate A", False)
+# a.minimiser(False).display("L'automate A minimise")
+# a.complement(False).display("Complement de A")
 
-b = startautomaton(
-		alphabet= ['a','b','c'],
-		epsilons=[],
-		states = [], initials = [1], finals = [2],
-		transitions=[(1,'a',1), (1,'b',1), (1,'c',2), (2,'a',2), (2,'b',2), (2, 'c', 2)]
-	)
+# b = startautomaton(
+# 		alphabet= ['a','b','c'],
+# 		epsilons=[],
+# 		states = [], initials = [1], finals = [2],
+# 		transitions=[(1,'a',1), (1,'b',1), (1,'c',2), (2,'a',2), (2,'b',2), (2, 'c', 2)]
+# 	)
 
-a = startautomaton(
-		alphabet= ['a','b','c'],
-		epsilons=[],
-		states = [], initials = [1], finals = [3],
-		transitions=[(1,'a',1), (1,'c',1), (1,'b',2), (2,'b',2), (2, 'c', 1), (2, 'a', 3), (3,'a',3), (3,'b',3), (3, 'c', 3)]
-	)
-a.display("Voici le nouvel automate A", False)
-b.display("Voici l'automate B", False)
+# a = startautomaton(
+# 		alphabet= ['a','b','c'],
+# 		epsilons=[],
+# 		states = [], initials = [1], finals = [3],
+# 		transitions=[(1,'a',1), (1,'c',1), (1,'b',2), (2,'b',2), (2, 'c', 1), (2, 'a', 3), (3,'a',3), (3,'b',3), (3, 'c', 3)]
+# 	)
+# a.display("Voici le nouvel automate A", False)
+# b.display("Voici l'automate B", False)
 
-a.union(b, False).display("Voici l'union de A et B")
-a.intersection(b, False).display("Voici l'intersection de A et B")
+# a.union(b, False).display("Voici l'union de A et B")
+# a.intersection(b, False).display("Voici l'intersection de A et B")
 
 expression = "aa(a + ab)* b"
-expression_prefixee = [".", 
-				["a"], 
-				["a"], 
-				["*",  
-					["+", 
-						[ "a", 	[".", 
-									["a"], 
-									["b"] 
+expression_prefixee = 	[".", 
+							["a"], 
+							["a"], 
+							["*",  
+								["+", 
+									[ ["a"], 	[".", 
+												["a"], 
+												["b"] 
+											] 
+									] 
 								] 
-						] 
-					] 
-				], 
-				["b"] 
-			]
+							], 
+							["b"] 
+						]
 
 print("Et pour finir, l'automate minimal de l'expression : ", expression)
 startautomaton.express_to_auto(expression_prefixee).display("Automate minimal correspondant a une expression prefixee (cf code)")
