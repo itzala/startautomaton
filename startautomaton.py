@@ -340,41 +340,46 @@ class startautomaton(automaton):
 		assert self.get_alphabet() == aut2.get_alphabet(), "Les deux automates n'ont pas le meme alphabet"
 		assert self.get_epsilons() == aut2.get_epsilons(), "Les epsilons ne sont pas encodees par les memes caracteres"
 
+		automate_clone = self.clone()
+
 		# On travaille sur des automates deterministes
 		if not aut2.est_deterministe():
 			aut2 = aut2.determinisation()
 			
 		if not self.est_deterministe():
-			self.determinisation(destructif)
+			automate_clone = self.determinisation(destructif)
 		
 		# On travaille sur des automates complet
 		if not aut2.est_complet():
 			aut2 = aut2.completer()
 
 		if not self.est_complet():
-			self.completer(destructif)		
+			automate_clone = self.completer(destructif)		
 
 		alphabet_courant = self.get_alphabet()
-		automate_tmp = startautomaton(
-			alphabet = alphabet_courant,
-			epsilons = self.get_epsilons())
-		finaux_1 = self.get_final_states()
+
+		automate_tmp = automaton(
+		alphabet= alphabet_courant,
+		epsilons= self.get_epsilons()
+			)
+		
+		finaux_1 = automate_clone.get_final_states()
 		finaux_2 = aut2.get_final_states()
 		
 		# Création états initiaux de l'automate de l'union
 
 
-		for ini_1 in self.get_initial_states():
+		for ini_1 in automate_clone.get_initial_states():
 			for ini_2 in aut2.get_initial_states():
 				etat = (ini_1, ini_2)
 				automate_tmp.add_initial_state(etat)
 
 		# Création de l'automate des couples (automate de l'union)
-		for etat_1 in self.get_states():
+		for etat_1 in automate_clone.get_states():
 			for etat_2 in aut2.get_states():
 				automate_tmp.add_state((etat_1, etat_2))
 				for lettre in alphabet_courant:
-					for dest_1 in self.delta(lettre, [etat_1]):
+					for dest_1 in automate_clone.delta(lettre, [etat_1]):
 						for dest_2 in aut2.delta(lettre, [etat_2]):
 							automate_tmp.add_transition(((etat_1, etat_2), lettre, (dest_1, dest_2)))
 				if etat_1 in finaux_1 or etat_2 in finaux_2:
@@ -418,41 +423,46 @@ class startautomaton(automaton):
 		assert self.get_alphabet() == aut2.get_alphabet(), "Les deux automates n'ont pas le meme alphabet"
 		assert self.get_epsilons() == aut2.get_epsilons(), "Les epsilons ne sont pas encodees par les memes caracteres"
 
+		automate_clone = self.clone()
+
 		# On travaille sur des automates deterministes
 		if not aut2.est_deterministe():
 			aut2 = aut2.determinisation()
 			
 		if not self.est_deterministe():
-			self.determinisation(destructif)
+			automate_clone = self.determinisation(destructif)
 		
 		# On travaille sur des automates complet
 		if not aut2.est_complet():
 			aut2 = aut2.completer()
 
 		if not self.est_complet():
-			self.completer(destructif)		
+			automate_clone = self.completer(destructif)		
 
 		alphabet_courant = self.get_alphabet()
-		automate_tmp = startautomaton(
-			alphabet = alphabet_courant,
-			epsilons = self.get_epsilons())
-		finaux_1 = self.get_final_states()
+
+		automate_tmp = automaton(
+		alphabet= alphabet_courant,
+		epsilons= self.get_epsilons()
+			)
+
+		finaux_1 = automate_clone.get_final_states()
 		finaux_2 = aut2.get_final_states()
 		
 		# Création états initiaux de l'automate de l'union
 
 
-		for ini_1 in self.get_initial_states():
+		for ini_1 in automate_clone.get_initial_states():
 			for ini_2 in aut2.get_initial_states():
 				etat = (ini_1, ini_2)
 				automate_tmp.add_initial_state(etat)
 
 		# Création de l'automate des couples (automate de l'union)
-		for etat_1 in self.get_states():
+		for etat_1 in automate_clone.get_states():
 			for etat_2 in aut2.get_states():
 				automate_tmp.add_state((etat_1, etat_2))
 				for lettre in alphabet_courant:
-					for dest_1 in self.delta(lettre, [etat_1]):
+					for dest_1 in automate_clone.delta(lettre, [etat_1]):
 						for dest_2 in aut2.delta(lettre, [etat_2]):
 							automate_tmp.add_transition(((etat_1, etat_2), lettre, (dest_1, dest_2)))
 				if etat_1 in finaux_1 and etat_2 in finaux_2:
@@ -660,7 +670,7 @@ if __name__ == "__main__":
 		alphabet,
 		epsilons,
 		states = [], initials = [0,1], finals = [3,4],
-		transitions=[(0,'a',1), (0, '0', 0), (1,'b',2), (2,'b',2), (2,'b',3), (3,'a',4), (4, 'a', 5), (4, 'a', 1)]
+		transitions=[(0,'a',1), (0, 'a', 0), (1,'b',2), (2,'b',2), (2,'b',3), (3,'a',4), (4, 'a', 5), (4, 'a', 1), (5, '0', 0)]
 	)
 
 # a.display("Voici l'automate A", False)
