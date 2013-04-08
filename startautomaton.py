@@ -760,4 +760,11 @@ expression_prefixee = 	[".",
 print("Et pour finir, l'automate minimal de l'expression : ", expression)
 startautomaton.express_to_auto(expression_prefixee).display("Automate minimal correspondant a une expression prefixee (cf code)")
 
+
+print("Importation de la liste d'automates à partir du fichier test.xml")
+liste_automates = xml_to_list_of_automata("test.xml")
+
+for auto in liste_automates:
+	auto.display()
+
 print("FIN !")
