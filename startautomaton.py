@@ -67,6 +67,16 @@ class startautomaton(automaton):
 				aut2.get_final_states(), aut2.get_transitions(),
 				aut2._est_deterministe, aut2._est_complet)
 
+	def auto_to_startauto(self, aut):
+		"""
+		Construit un startautomaton à partir d'un automaton
+		"""
+		self.__init__(aut.get_alphabet(), aut.get_epsilons(),
+			aut.get_states(), aut.get_initial_states(),
+			aut.get_final_states(), aut.get_transitions(), False, False)
+		self.est_deterministe()
+		self.est_complet()
+
 
 # Fonctions utilitaires
 
@@ -253,8 +263,10 @@ class startautomaton(automaton):
 			automate_tmp = self
 		else:
 			automate_tmp = self.clone()
-
-		return automate_tmp.miroir().determinisation(True).miroir().determinisation(True)
+		automate_tmp.miroir(True)
+		automate_tmp.determinisation(True)
+		automate_tmp.miroir(True)
+		return automate_tmp.determinisation(True)
 
 	def determinisation(self, destructif=False):
 		"""
@@ -272,17 +284,18 @@ class startautomaton(automaton):
 
 		automate_clone.remove_epsilon_transitions()
 		finaux = automate_clone.get_final_states()											# On récupère les etats finaux
-
-		automate_tmp.add_initial_state(pretty_set(automate_clone.get_initial_states()))		# On ajoute les etats initiaux de l'automate d'orgine
+		automate_tmp.add_initial_state(automate_clone.get_initial_states())		# On ajoute les etats initiaux de l'automate d'orgine
 
 		file_etats = deque(automate_tmp.get_initial_states())						# On créé une file avec les etats initiaux
 
 		while len(file_etats) > 0:									# Tant qu'on a des etats rajoutés a l'automate deterministe
 			etat_courant = file_etats.popleft()							# On récupère l'etat a traiter
+			for e in etat_courant:
+				if e in finaux:
+					automate_tmp.add_final_state(etat_courant)
 
 			if not isinstance(etat_courant, pretty_set):				# On en fait un set, si s'en pas déjà un (juste pour simplifier l'implémentation)
 				etat_courant = set(etat_courant)
-
 			if not etat_courant == set():								# Si ce n'est pas un etat vide
 				for l in automate_clone.get_alphabet():								# Pour chaque lettre de l'alphabet
 					if not l in automate_clone.get_epsilons():						# On recupere l'etat accessible par cette lettre
@@ -297,7 +310,7 @@ class startautomaton(automaton):
 
 							automate_tmp.add_transition((etat_courant, l, nouveau))	# On rajoute l'etat et la transition depuis l'etat traite
 
-		automate_tmp.est_complet()
+		automate_tmp.completer(True)
 
 		automate_tmp._est_deterministe = True
 
@@ -673,73 +686,73 @@ if __name__ == "__main__":
 		transitions=[(0,'a',1), (0, 'a', 0), (1,'b',2), (2,'b',2), (2,'b',3), (3,'a',4), (4, 'a', 5), (4, 'a', 1), (5, '0', 0)]
 	)
 
-# a.display("Voici l'automate A", False)
-# a.print_alphabet()
-# a.print_epsilons()
-# a.print_etats()
-# a.print_etats_initiaux()
-# a.print_etats_finaux()
-# a.print_transitions()
+a.display("Voici l'automate A", False)
+a.print_alphabet()
+a.print_epsilons()
+a.print_etats()
+a.print_etats_initiaux()
+a.print_etats_finaux()
+a.print_transitions()
 
-# print("L'automate a est-il deterministe ?\n", a.est_deterministe())
+print("L'automate a est-il deterministe ?\n", a.est_deterministe())
 
-# print("L'automate A est-il complet ?\n", a.est_complet())
+print("L'automate A est-il complet ?\n", a.est_complet())
 
-# tmp = a.clone()
-# print("\nOn enlève les epsilons (remove_epsilons())")
-# tmp.remove_epsilons()
-# tmp.print_epsilons()
-# tmp.display("L'automate A sans caracteres encodant epsilon")
+tmp = a.clone()
+print("\nOn enlève les epsilons (remove_epsilons())")
+tmp.remove_epsilons()
+tmp.print_epsilons()
+tmp.display("L'automate A sans caracteres encodant epsilon")
 
-# tmp = a.clone()
-# print("\nOn enlève les etats intiaux")
-# tmp.remove_initial_states()
-# tmp.print_etats_initiaux()
-# tmp.display("L'automate A sans etats initiaux")
+tmp = a.clone()
+print("\nOn enlève les etats intiaux")
+tmp.remove_initial_states()
+tmp.print_etats_initiaux()
+tmp.display("L'automate A sans etats initiaux")
 
-# tmp = a.clone()
-# print("\nOn enlève les etats finaux")
-# tmp.remove_final_states()
-# tmp.print_etats_finaux()
-# tmp.display("L'automate A sans etats finaux")
+tmp = a.clone()
+print("\nOn enlève les etats finaux")
+tmp.remove_final_states()
+tmp.print_etats_finaux()
+tmp.display("L'automate A sans etats finaux")
 
-# tmp = a.clone()
-# print("\nOn enlève les transitions")
-# tmp.remove_transitions()
-# tmp.print_transitions()
-# tmp.display("L'automate A sans transitions")
+tmp = a.clone()
+print("\nOn enlève les transitions")
+tmp.remove_transitions()
+tmp.print_transitions()
+tmp.display("L'automate A sans transitions")
 
-# tmp = a.clone()
-# print("\nOn enlève les epsilon transitions")
-# tmp.remove_epsilon_transitions()
-# tmp.print_epsilons()
-# tmp.display("L'automate A sans transitions epsilon")
+tmp = a.clone()
+print("\nOn enlève les epsilon transitions")
+tmp.remove_epsilon_transitions()
+tmp.print_epsilons()
+tmp.display("L'automate A sans transitions epsilon")
 
 
-# a.completer(False).display("L'automate A complet", False)
-# a.determinisation(False).display("L'automate A determinise")
-# a.miroir(False).display("Le miroir de l'automate A", False)
-# a.minimiser(False).display("L'automate A minimise")
-# a.complement(False).display("Complement de A")
+a.completer(False).display("L'automate A complet", False)
+a.determinisation(False).display("L'automate A determinise")
+a.miroir(False).display("Le miroir de l'automate A", False)
+a.minimiser(False).display("L'automate A minimise")
+a.complement(False).display("Complement de A")
 
-# b = startautomaton(
-# 		alphabet= ['a','b','c'],
-# 		epsilons=[],
-# 		states = [], initials = [1], finals = [2],
-# 		transitions=[(1,'a',1), (1,'b',1), (1,'c',2), (2,'a',2), (2,'b',2), (2, 'c', 2)]
-# 	)
+b = startautomaton(
+		alphabet= ['a','b','c'],
+		epsilons=[],
+		states = [], initials = [1], finals = [2],
+		transitions=[(1,'a',1), (1,'b',1), (1,'c',2), (2,'a',2), (2,'b',2), (2, 'c', 2)]
+	)
 
-# a = startautomaton(
-# 		alphabet= ['a','b','c'],
-# 		epsilons=[],
-# 		states = [], initials = [1], finals = [3],
-# 		transitions=[(1,'a',1), (1,'c',1), (1,'b',2), (2,'b',2), (2, 'c', 1), (2, 'a', 3), (3,'a',3), (3,'b',3), (3, 'c', 3)]
-# 	)
-# a.display("Voici le nouvel automate A", False)
-# b.display("Voici l'automate B", False)
+a = startautomaton(
+		alphabet= ['a','b','c'],
+		epsilons=[],
+		states = [], initials = [1], finals = [3],
+		transitions=[(1,'a',1), (1,'c',1), (1,'b',2), (2,'b',2), (2, 'c', 1), (2, 'a', 3), (3,'a',3), (3,'b',3), (3, 'c', 3)]
+	)
+a.display("Voici le nouvel automate A", False)
+b.display("Voici l'automate B", False)
 
-# a.union(b, False).display("Voici l'union de A et B")
-# a.intersection(b, False).display("Voici l'intersection de A et B")
+a.union(b, False).display("Voici l'union de A et B")
+a.intersection(b, False).display("Voici l'intersection de A et B")
 
 expression = "aa(a + ab)* b"
 expression_prefixee = 	[".", 
@@ -765,6 +778,15 @@ print("Importation de la liste d'automates à partir du fichier test.xml")
 liste_automates = xml_to_list_of_automata("test.xml")
 
 for auto in liste_automates:
-	auto.display()
+	auto.renumber_the_states()
+
+liste_automates[0].display("Permier automate", False)
+liste_automates[1].display("Leur minimal", False)
+
+a.auto_to_startauto(liste_automates[0])
+a.minimiser(True)
+a.renumber_the_states()
+a.display("Notre automate minimal", True)
+
 
 print("FIN !")
